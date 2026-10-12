@@ -19,9 +19,7 @@ const signColor = (value: number): 'green' | 'red' | undefined => {
 };
 
 const formatCell = (cell: PerformanceCell): string =>
-  cell.unavailable
-    ? '—'
-    : `${cell.avg.toFixed(2)} ${cell.unit}${cell.sparkline ? ` ${cell.sparkline}` : ''}`.trim();
+  cell.unavailable ? '—' : `${cell.avg.toFixed(2)} ${cell.unit}`.trim();
 
 const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
   items,

@@ -4,7 +4,6 @@ import { Content, Label, List, ListItem, Title } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { MetricSegments, MetricStats } from '../../types/aibom';
 import { toFlexNumber } from '../../utils/flexible';
-import { sparkline } from '../../utils/metricSegments';
 
 interface AIBOMMetricsTableProps {
   title: string;
@@ -72,7 +71,6 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
             <Th>{t('P95')}</Th>
             <Th>{t('Unit')}</Th>
             <Th>{t('1st -> mid -> last')}</Th>
-            <Th>{t('Shape')}</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -101,7 +99,6 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
                     stats?.segments?.middle_third,
                   )} -> ${formatSegment(stats?.segments?.last_third)}`}
                 </Td>
-                <Td dataLabel={t('Shape')}>{sparkline(stats?.segments) || '—'}</Td>
               </Tr>
             );
           })}
