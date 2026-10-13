@@ -7,7 +7,7 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/gsanders/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
+This pulls the latest chart and image from `quay.io/gsanders/aibom-console-plugin` and installs to the `project-aibom` namespace. Pass `--namespace=<ns>` to change it.
 
 ## Common options
 
@@ -31,6 +31,22 @@ helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin
 ```
 
 See `charts/aibom-console-plugin/values.yaml` for all configuration options.
+
+## Feature flags
+
+| Value | Default | Description |
+|-------|---------|-------------|
+| `plugin.featureFlags.telemetryTab` | `true` | Shows the Telemetry tab on the Detail and Compare views. |
+| `plugin.featureFlags.csvExport` | `false` | Shows the CSV **Download** menu on the List and Detail views. Off by default. |
+
+For example, to turn on CSV export:
+
+```sh
+helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin \
+  -n aibom-console-plugin --create-namespace --set plugin.featureFlags.csvExport=true
+```
+
+The flags are rendered into a ConfigMap the plugin reads at runtime, so changing them needs no image rebuild.
 
 ## Building and pushing
 

@@ -1,5 +1,8 @@
 # Prerequisites
 
-- **The webhook's CRD and view role.** `aibom-webhook-service`'s CRD (`aiboms.aibom.io`) and its `aibom-view` aggregated `ClusterRole` must be installed on the cluster. A user with `view` on a namespace can then browse AIBOMs there through this plugin, including the Telemetry charts, with no extra RBAC grant. The charts read each AIBOM's stored `AIBOMTelemetry` object, which the same role covers.
+- **The webhook installed, not just its CRD.** `aibom-webhook-service`'s CRD (`aiboms.aibom.io`) and its `aibom-view` aggregated `ClusterRole` must be on the cluster, and the webhook must be running for any AIBOMs to exist. A user with `view` on a namespace can then browse AIBOMs there through this plugin, including the Telemetry charts, with no extra RBAC grant. The charts read each AIBOM's stored `AIBOMTelemetry` object, which the same role covers.
 - **An OpenShift cluster** (4.12+, `ConsolePlugin` CRD v1) and `oc`/`kubectl`, to run or deploy the plugin.
-- **Node.js and [yarn](https://yarnpkg.com)**, to build the plugin.
+- **Cluster-admin, to deploy.** The chart creates a cluster-scoped `ConsolePlugin`, a `ClusterRole` and `ClusterRoleBinding`, and runs a `patch-consoles` Job that adds the plugin to the console operator's `spec.plugins`. To deploy without cluster-admin, pass `--skip-plugin-cr` and `--skip-patcher` to `just deploy`, and have a cluster-admin create the `ConsolePlugin` and enable it on the console once.
+- **Helm 3 and [`just`](https://github.com/casey/just)**, to deploy with the recipes in [Deployment](deployment.md).
+- **Access to `quay.io/gsanders`.** The chart's image and the chart itself are pulled from there. On a cluster that can't reach Quay, mirror both and set `plugin.image`, and set `plugin.imagePullSecrets` if the mirror needs credentials. See [Deployment](deployment.md).
+- **To build or develop:** Node.js 22 (the version the Dockerfile builds with), [Yarn](https://yarnpkg.com) 4 through Corepack (`packageManager` in `package.json`), and `podman` or `docker` for `yarn start-console`.
