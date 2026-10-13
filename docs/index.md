@@ -14,6 +14,24 @@ For a terminal-based alternative with the same filter, sort and compare capabili
 - **Telemetry tabs** (Detail and Compare): charts for GPU, CPU, memory, network and inference (vLLM) metrics, drawn from the time series the webhook stores with each AIBOM at collection time. They outlive Prometheus's retention window. AIBOMs created before that was stored have no charts.
 - **CSV export:** download a summary or the full telemetry of the selected AIBOMs.
 
+## Screenshots
+
+**List view:** filter and sort AIBOMs, select rows to compare.
+
+![AIBOM list view](img/list.png)
+
+**Detail view:** model, source, environment and inference fields, with signature status.
+
+![AIBOM detail view](img/detail.png)
+
+**Compare view:** fields side by side, with differing rows flagged.
+
+![Compare view](img/compare.png)
+
+**Compare telemetry:** runs overlaid on elapsed time so they line up.
+
+![Compare telemetry](img/compare-telemetry.png)
+
 ## Where to go next
 
 - [Prerequisites](guide/prerequisites.md)
