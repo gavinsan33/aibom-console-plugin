@@ -95,8 +95,6 @@ spec:
     resource_utilization:
       collected_at: "2026-09-20T14:32:10Z"
       summary_includes_cold_start: false
-      grafana_links:
-        - https://grafana.example.com/explore?left=%7B%22datasource%22%3A%22prometheus%22%7D
       metrics:
         gpu_utilization:
           unit: "%"

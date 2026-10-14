@@ -133,7 +133,6 @@ export interface AIBOMData {
   };
   resource_utilization?: {
     collected_at?: string;
-    grafana_links?: string[];
     summary_includes_cold_start?: boolean;
     note?: string;
     metrics?: Record<string, MetricStats>;
