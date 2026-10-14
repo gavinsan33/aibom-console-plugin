@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Content, Label, List, ListItem, Title } from '@patternfly/react-core';
+import { Content, Label, Title } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { MetricSegments, MetricStats } from '../../types/aibom';
 import { toFlexNumber } from '../../utils/flexible';
@@ -13,7 +13,6 @@ interface AIBOMMetricsTableProps {
   order: readonly string[];
   labels: Record<string, string>;
   summaryIncludesColdStart?: boolean;
-  grafanaLinks?: string[];
   note?: string;
 }
 
@@ -40,7 +39,6 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
   order,
   labels,
   summaryIncludesColdStart,
-  grafanaLinks,
   note,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
@@ -106,17 +104,6 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
       </Table>
       {summaryIncludesColdStart && (
         <Content component="small">{t('(includes cold start)')}</Content>
-      )}
-      {grafanaLinks && grafanaLinks.length > 0 && (
-        <List isPlain>
-          {grafanaLinks.map((link) => (
-            <ListItem key={link}>
-              <a href={link} target="_blank" rel="noreferrer">
-                {t('Grafana')}
-              </a>
-            </ListItem>
-          ))}
-        </List>
       )}
     </>
   );

@@ -122,7 +122,6 @@ const AIBOMDetailPage: FC = () => {
                         summaryIncludesColdStart={
                           data.resource_utilization.summary_includes_cold_start
                         }
-                        grafanaLinks={data.resource_utilization.grafana_links}
                         note={data.resource_utilization.note}
                       />
                     </Section>
