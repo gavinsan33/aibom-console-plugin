@@ -155,6 +155,28 @@ deploy *args: _check-auth
         "${kube_as_user_args[@]}" \
         "${values_args[@]}"
 
+# Uninstall the console plugin: remove the Helm release (including the
+# ConsolePlugin CR) and un-register the plugin from the console operator, which
+# the patcher job added to spec.plugins and Helm does not revert. Removing it
+# from spec.plugins needs cluster-admin.
+#
+# Usage: just uninstall [--namespace=<ns>]
+[group('deploy')]
+uninstall *args: _check-auth
+    #!/usr/bin/env bash
+    set -euo pipefail
+    namespace="aibom-console-plugin"
+    for arg in {{ args }}; do
+        case "$arg" in
+            --namespace=*) namespace="${arg#--namespace=}" ;;
+            *) echo "error: unknown argument '$arg' (expected --namespace=<ns>)" >&2; exit 1 ;;
+        esac
+    done
+    helm uninstall aibom-console-plugin -n "$namespace"
+    oc get consoles.operator.openshift.io cluster -o json --kube-as-user=system:admin \
+        | jq '.spec.plugins -= ["aibom-console-plugin"]' \
+        | oc apply --kube-as-user=system:admin -f -
+
 # --- Chart publishing --------------------------------------------------------
 #
 # Packages the console plugin chart and pushes it as an OCI artifact to Quay,

@@ -32,6 +32,23 @@ helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin
 
 See `charts/aibom-console-plugin/values.yaml` for all configuration options.
 
+## Uninstall
+
+```sh
+just uninstall
+```
+
+This removes the Helm release (including the `ConsolePlugin` CR) and un-registers the plugin from the console operator. Pass `--namespace=<ns>` if you deployed elsewhere.
+
+Or do it by hand. `helm uninstall` removes the chart's resources but does **not** undo the patcher job's edit to the console operator, which added the plugin to `spec.plugins`:
+
+```sh
+helm uninstall aibom-console-plugin -n aibom-console-plugin
+oc get consoles.operator.openshift.io cluster -o json \
+  | jq '.spec.plugins -= ["aibom-console-plugin"]' \
+  | oc apply -f -
+```
+
 ## Feature flags
 
 | Value | Default | Description |
