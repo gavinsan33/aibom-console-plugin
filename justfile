@@ -76,7 +76,7 @@ deploy-local *args: _check-auth
     repo="{{ default_repo }}"
     version=""
     values_file=""
-    namespace="project-aibom"
+    namespace="aibom-console-plugin"
     skip_plugin_cr=false
     skip_patcher=false
     for arg in {{ args }}; do
@@ -129,7 +129,7 @@ deploy *args: _check-auth
     repo="{{ default_repo }}"
     version="latest"
     values_file=""
-    namespace="project-aibom"
+    namespace="aibom-console-plugin"
     skip_plugin_cr=false
     skip_patcher=false
     for arg in {{ args }}; do
