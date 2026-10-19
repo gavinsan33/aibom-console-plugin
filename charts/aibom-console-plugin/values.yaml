@@ -1,4 +1,10 @@
 ---
+# Ingress NetworkPolicy allowing the OpenShift console to reach the plugin pod.
+# On by default: without it a default-deny install namespace silently breaks the
+# whole console (see templates/networkpolicy.yaml). Additive, so safe to leave on.
+networkPolicy:
+  enabled: true
+
 plugin:
   enabled: true
   name: "aibom-console-plugin"
