@@ -13,6 +13,13 @@ const item = (name: string, model: string, gpuCount: number, note?: string): AIB
         note,
         metrics: { cpu_usage: { avg: 2.5, unit: 'cores' } },
       },
+      inference: note
+        ? undefined
+        : {
+            performance: {
+              metrics: { time_to_first_token_seconds: { avg: 0.12, unit: 's' } },
+            },
+          },
     },
   },
 });
@@ -28,7 +35,14 @@ describe('buildSummaryCsv', () => {
     expect(header.slice(0, 4)).toEqual(['aibom', 'namespace', 'name', 'collected_at']);
     expect(header).toContain('Model Name');
     expect(header).toContain('CPU Usage (avg)');
+    expect(header).toContain('TTFT (avg)');
     expect(lines[1].startsWith('ns/a,ns,a,2026-01-01T00:00:00Z')).toBe(true);
+  });
+
+  it('reports inference metrics, blanking runs with none', () => {
+    const col = header.indexOf('TTFT (avg)');
+    expect(lines[1].split(',')[col]).toBe('0.12');
+    expect(lines[2].split(',')[col]).toBe('');
   });
 
   it('neutralizes formula-looking values from spec.data', () => {

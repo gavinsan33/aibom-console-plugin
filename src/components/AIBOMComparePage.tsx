@@ -18,7 +18,8 @@ import {
   TabTitleText,
 } from '@patternfly/react-core';
 import type { AIBOMResource } from '../types/aibom';
-import { getJobName } from '../utils/aibomFields';
+import { getJobName, hasNoInferenceMetrics } from '../utils/aibomFields';
+import { INFERENCE } from '../utils/comparePerformance';
 import { getPluginFeatureFlags } from '../utils/pluginFeatureFlags';
 import AIBOMCompareFieldsTable from './compare/AIBOMCompareFieldsTable';
 import AIBOMCompareTelemetryTab from './compare/AIBOMCompareTelemetryTab';
@@ -133,6 +134,11 @@ const AIBOMComparePage: FC = () => {
                 <Section title={t('Hardware Performance')}>
                   <AIBOMComparePerformanceTable items={items} runNames={runNames} />
                 </Section>
+                {items.some((item) => !hasNoInferenceMetrics(item)) && (
+                  <Section title={t('Inference Performance')}>
+                    <AIBOMComparePerformanceTable items={items} runNames={runNames} set={INFERENCE} />
+                  </Section>
+                )}
               </Grid>
             </Tab>
             {telemetryEnabled && (

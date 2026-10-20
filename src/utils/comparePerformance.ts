@@ -1,6 +1,18 @@
 import type { AIBOMResource } from '../types/aibom';
-import { HARDWARE_METRIC_LABELS, HARDWARE_METRIC_ORDER } from '../types/aibom';
-import { getMetricAvg, getMetricUnit, getResourceUtilizationNote } from './aibomFields';
+import {
+  HARDWARE_METRIC_LABELS,
+  HARDWARE_METRIC_ORDER,
+  INFERENCE_METRIC_LABELS,
+  INFERENCE_METRIC_ORDER,
+} from '../types/aibom';
+import {
+  getInferenceMetricAvg,
+  getInferenceMetricUnit,
+  getMetricAvg,
+  getMetricUnit,
+  getResourceUtilizationNote,
+  hasNoInferenceMetrics,
+} from './aibomFields';
 
 export interface PerformanceCell {
   avg: number;
@@ -18,22 +30,50 @@ export interface PerformanceRow {
   pctChange?: number;
 }
 
+export interface MetricSet {
+  order: readonly string[];
+  labels: Record<string, string>;
+  getAvg: (a: AIBOMResource, key: string) => number;
+  getUnit: (a: AIBOMResource, key: string) => string;
+  unavailable: (a: AIBOMResource) => boolean;
+}
+
+const HARDWARE: MetricSet = {
+  order: HARDWARE_METRIC_ORDER,
+  labels: HARDWARE_METRIC_LABELS,
+  getAvg: getMetricAvg,
+  getUnit: getMetricUnit,
+  unavailable: (a) => getResourceUtilizationNote(a) !== '',
+};
+
+export const INFERENCE: MetricSet = {
+  order: INFERENCE_METRIC_ORDER,
+  labels: INFERENCE_METRIC_LABELS,
+  getAvg: getInferenceMetricAvg,
+  getUnit: getInferenceMetricUnit,
+  unavailable: hasNoInferenceMetrics,
+};
+
 /**
- * One row per hardware metric, one value per selected item -- mirrors
- * `oc-aibom`'s `DiffPerformance` (2 items: value + delta/pct-change) and
- * `compare` (N items: value only), unified into a single N-scalable shape.
+ * One row per metric (hardware by default), one value per selected item --
+ * mirrors `oc-aibom`'s `DiffPerformance` (2 items: value + delta/pct-change)
+ * and `compare` (N items: value only), unified into a single N-scalable shape.
+ * Pass `INFERENCE` for the vLLM serving metrics instead.
  */
-export function buildPerformanceRows(items: AIBOMResource[]): PerformanceRow[] {
-  return HARDWARE_METRIC_ORDER.map((metricKey) => {
+export function buildPerformanceRows(
+  items: AIBOMResource[],
+  set: MetricSet = HARDWARE,
+): PerformanceRow[] {
+  return set.order.map((metricKey) => {
     const values = items.map((item) => ({
-      avg: getMetricAvg(item, metricKey),
-      unit: getMetricUnit(item, metricKey),
-      unavailable: getResourceUtilizationNote(item) !== '',
+      avg: set.getAvg(item, metricKey),
+      unit: set.getUnit(item, metricKey),
+      unavailable: set.unavailable(item),
     }));
 
     const row: PerformanceRow = {
       metricKey,
-      label: HARDWARE_METRIC_LABELS[metricKey] ?? metricKey,
+      label: set.labels[metricKey] ?? metricKey,
       values,
     };
 

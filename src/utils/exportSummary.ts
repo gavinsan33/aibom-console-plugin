@@ -1,7 +1,7 @@
 import type { AIBOMResource } from '../types/aibom';
 import { getCollectedAt } from './aibomFields';
 import { buildFieldRows } from './compareFields';
-import { buildPerformanceRows } from './comparePerformance';
+import { buildPerformanceRows, INFERENCE } from './comparePerformance';
 import { toCsv } from './csv';
 
 export const aibomKey = (item: AIBOMResource): string =>
@@ -15,7 +15,7 @@ export const aibomKey = (item: AIBOMResource): string =>
  */
 export function buildSummaryCsv(items: AIBOMResource[]): string {
   const fields = buildFieldRows(items);
-  const performance = buildPerformanceRows(items);
+  const performance = [...buildPerformanceRows(items), ...buildPerformanceRows(items, INFERENCE)];
 
   const header = [
     'aibom',
