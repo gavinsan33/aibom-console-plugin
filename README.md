@@ -110,7 +110,7 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/gsanders/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
+This pulls the latest chart and image from `quay.io/project-aibom/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
 
 ### Common options
 
@@ -129,7 +129,7 @@ just deploy --repo=quay.io/your-org --values=values-prod.yaml
 Or use Helm directly:
 
 ```sh
-helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin \
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console-plugin \
   -n aibom-console-plugin --create-namespace
 ```
 

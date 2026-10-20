@@ -7,7 +7,7 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/gsanders/aibom-console-plugin` and installs to the `project-aibom` namespace. Pass `--namespace=<ns>` to change it.
+This pulls the latest chart and image from `quay.io/project-aibom/aibom-console-plugin` and installs to the `project-aibom` namespace. Pass `--namespace=<ns>` to change it.
 
 ## Common options
 
@@ -26,7 +26,7 @@ just deploy --repo=quay.io/your-org --values=values-prod.yaml
 Or use Helm directly:
 
 ```sh
-helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin \
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console-plugin \
   -n aibom-console-plugin --create-namespace
 ```
 
@@ -59,7 +59,7 @@ oc get consoles.operator.openshift.io cluster -o json \
 For example, to turn on CSV export:
 
 ```sh
-helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin \
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console-plugin \
   -n aibom-console-plugin --create-namespace --set plugin.featureFlags.csvExport=true
 ```
 
