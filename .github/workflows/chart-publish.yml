@@ -1,12 +1,9 @@
 name: Publish chart to Quay
 
-# Mirrors the container images' own auto-build story (see README's "Setting Up
-# Quay Auto-Build"): images update automatically on every push to main via
-# Quay's own GitHub build trigger, but that trigger only knows how to run a
-# `docker build` — it can't drive `helm package`/`helm push`. This workflow is
-# the equivalent for the chart, restricted to pushes that land on main (i.e.
-# merges, not every commit on a feature branch) and only when chart content
-# actually changed.
+# The chart's counterpart to images.yml, which rebuilds the image :latest on
+# every push to main. Restricted to pushes that land on main (i.e. merges, not
+# every commit on a feature branch) and only when chart content actually
+# changed.
 on:
   push:
     branches: [main]

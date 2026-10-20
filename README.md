@@ -89,7 +89,7 @@ Or build, push, and deploy in one go:
 just deploy-local
 ```
 
-Images auto-build on every push to main via Quay's GitHub build trigger, pushing both `:latest` (mutable) and `:${commit_sha}` (immutable) tags. One-time setup: add a GitHub build trigger in the Quay UI for this repo (branch `main`, Dockerfile `/Dockerfile`).
+The image builds and pushes on every push to main via GitHub Actions (`.github/workflows/images.yml`), tagging both `:latest` (mutable) and `:${commit_sha}` (immutable). It uses the `QUAY_ROBOT_USERNAME`/`QUAY_ROBOT_TOKEN` secrets, which need push access to the Quay org.
 
 ### Helm chart
 
