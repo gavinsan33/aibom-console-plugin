@@ -21,6 +21,8 @@ interface AIBOMStoredTelemetryChartsProps {
   name: string;
   /** Whether the workload was recorded as using GPUs, to say so when no GPU series were stored. */
   expectsGpu: boolean;
+  /** Metric limits from resource_utilization.metrics. */
+  limits?: Record<string, number>;
 }
 
 interface ChartSpec {
@@ -48,6 +50,7 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
   stored,
   name,
   expectsGpu,
+  limits,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const [expanded, setExpanded] = useState(false);
@@ -76,6 +79,7 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
                   unit={stored.metrics[spec.metricKey].unit}
                   expanded={expanded}
                   fitToData={fitToData}
+                  limit={limits?.[spec.metricKey]}
                   runs={[
                     {
                       name,

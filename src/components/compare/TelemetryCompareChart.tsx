@@ -26,6 +26,8 @@ interface TelemetryCompareChartProps {
   expanded: boolean;
   /** Zoom to this chart's own data instead of the shared x range. */
   fitToData?: boolean;
+  /** Hardware metric limit to show as a horizontal red line. */
+  limit?: number;
 }
 
 /**
@@ -41,6 +43,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
   unit,
   expanded,
   fitToData = false,
+  limit,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const lines = useMemo(
@@ -65,6 +68,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
       legend={runs.map(({ name, colorIndex }) => ({ name, colorIndex }))}
       unit={unit}
       xMax={xMax}
+      limit={limit}
     />
   );
 };

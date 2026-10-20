@@ -19,6 +19,8 @@ interface TelemetryLineChartProps {
   unit?: string;
   /** Fixes the x-axis to `[0, xMax]` elapsed seconds; auto-fits to this chart's own data when omitted. */
   xMax?: number;
+  /** Hardware metric limit to show as a horizontal red line. */
+  limit?: number;
 }
 
 const PLOT_HEIGHT = 220;
@@ -77,7 +79,14 @@ const tooltipLabel =
  * time since each run's own start; every line is drawn in its run's color
  * (`runChartColor`), the same one its table `Label` uses.
  */
-const TelemetryLineChart: FC<TelemetryLineChartProps> = ({ title, lines, legend, unit, xMax }) => {
+const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
+  title,
+  lines,
+  legend,
+  unit,
+  xMax,
+  limit,
+}) => {
   const [ref, width] = useContainerWidth();
   const rows = legendRowCount(
     legend.map((run) => run.name),
@@ -122,6 +131,23 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({ title, lines, legend,
             }}
           />
         ))}
+        {limit !== undefined && limit > 0 && (() => {
+          const maxX = xMax ?? Math.max(0, ...lines.flatMap((l) => l.points.map((p) => p.x)));
+          return (
+            <ChartLine
+              data={[
+                { x: 0, y: limit },
+                { x: maxX, y: limit },
+              ]}
+              style={{
+                data: {
+                  stroke: '#C9190B',
+                  strokeWidth: 1.5,
+                },
+              }}
+            />
+          );
+        })()}
       </Chart>
     </div>
   );
