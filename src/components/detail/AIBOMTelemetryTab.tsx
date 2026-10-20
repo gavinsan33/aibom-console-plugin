@@ -38,12 +38,22 @@ const AIBOMTelemetryTab: FC<AIBOMTelemetryTabProps> = ({ item }) => {
   const name = jobName === '' ? (item.metadata?.name ?? '') : jobName;
   const stored = byItem[0];
 
+  const limits = useMemo(() => {
+    const metrics = item.spec?.data?.resource_utilization?.metrics ?? {};
+    return Object.fromEntries(
+      Object.entries(metrics)
+        .map(([key, stats]) => [key, toFlexNumber(stats?.limit)])
+        .filter(([, limit]) => limit !== undefined),
+    ) as Record<string, number>;
+  }, [item]);
+
   if (stored) {
     return (
       <AIBOMStoredTelemetryCharts
         stored={stored}
         name={name}
         expectsGpu={(toFlexNumber(item.spec?.data?.environment?.gpu_count) ?? 0) > 0}
+        limits={limits}
       />
     );
   }
