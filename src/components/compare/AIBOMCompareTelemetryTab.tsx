@@ -22,6 +22,8 @@ import {
   INFERENCE_METRIC_ORDER,
 } from '../../types/aibom';
 import type { StoredTelemetry } from '../../types/telemetrySeries';
+import { toFlexNumber } from '../../utils/flexible';
+import { limitInSeriesUnit } from '../../utils/formatMetricValue';
 import { runColor } from '../../utils/runColors';
 import Section from '../detail/Section';
 import FitToDataSwitch from './FitToDataSwitch';
@@ -39,6 +41,7 @@ interface ChartSpec {
   title: string;
   unit?: string;
   runs: CompareChartRun[];
+  limit?: number;
 }
 
 /**
@@ -50,6 +53,7 @@ interface ChartSpec {
 function buildChartSpecs(
   runNames: string[],
   stored: (StoredTelemetry | undefined)[],
+  items: AIBOMResource[],
   metricKeys: readonly string[],
   labels: Record<string, string>,
   keyPrefix: string,
@@ -57,10 +61,17 @@ function buildChartSpecs(
   return metricKeys.flatMap((metricKey) => {
     const runs: CompareChartRun[] = [];
     let unit: string | undefined;
+    let limit: number | undefined;
     stored.forEach((run, colorIndex) => {
       const metric = run?.metrics[metricKey];
       if (!run || !metric) return;
       unit ??= metric.unit;
+      if (limit === undefined) {
+        const rstats = items[colorIndex]?.spec?.data?.resource_utilization?.metrics?.[metricKey];
+        const rlimit = toFlexNumber(rstats?.limit);
+        // The series is in raw base units; the stored limit is in display units.
+        if (rlimit !== undefined) limit = limitInSeriesUnit(rlimit, rstats?.unit);
+      }
       runs.push({
         name: runNames[colorIndex],
         colorIndex,
@@ -70,7 +81,15 @@ function buildChartSpecs(
       });
     });
     return runs.length > 0
-      ? [{ key: `${keyPrefix}-${metricKey}`, title: labels[metricKey] ?? metricKey, unit, runs }]
+      ? [
+          {
+            key: `${keyPrefix}-${metricKey}`,
+            title: labels[metricKey] ?? metricKey,
+            unit,
+            runs,
+            limit,
+          },
+        ]
       : [];
   });
 }
@@ -86,6 +105,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
       hardware: buildChartSpecs(
         runNames,
         byItem,
+        items,
         HARDWARE_METRIC_ORDER,
         HARDWARE_METRIC_LABELS,
         'hw',
@@ -93,12 +113,13 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
       inference: buildChartSpecs(
         runNames,
         byItem,
+        items,
         INFERENCE_METRIC_ORDER,
         INFERENCE_METRIC_LABELS,
         'inf',
       ),
     }),
-    [runNames, byItem],
+    [runNames, byItem, items],
   );
 
   if (loading) {
@@ -131,6 +152,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
                   unit={spec.unit}
                   expanded={expanded}
                   fitToData={fitToData}
+                  limit={spec.limit}
                 />
               </CardBody>
             </Card>
