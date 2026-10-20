@@ -66,3 +66,14 @@ export const getMetricAvg = (a: AIBOMResource, metricKey: string): number => {
 
 export const getMetricUnit = (a: AIBOMResource, metricKey: string): string =>
   a.spec?.data?.resource_utilization?.metrics?.[metricKey]?.unit ?? '';
+
+/** vLLM serving metric average, mirroring getMetricAvg but reading `inference.performance.metrics`. 0 when absent. */
+export const getInferenceMetricAvg = (a: AIBOMResource, metricKey: string): number =>
+  toFlexNumber(a.spec?.data?.inference?.performance?.metrics?.[metricKey]?.avg) ?? 0;
+
+export const getInferenceMetricUnit = (a: AIBOMResource, metricKey: string): string =>
+  a.spec?.data?.inference?.performance?.metrics?.[metricKey]?.unit ?? '';
+
+/** True when a run has no vLLM serving telemetry -- its inference metric cells should blank, not show a meaningless 0. */
+export const hasNoInferenceMetrics = (a: AIBOMResource): boolean =>
+  Object.keys(a.spec?.data?.inference?.performance?.metrics ?? {}).length === 0;
