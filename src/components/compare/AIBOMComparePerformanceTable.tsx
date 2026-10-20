@@ -4,12 +4,14 @@ import { Label } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
 import { buildPerformanceRows } from '../../utils/comparePerformance';
-import type { PerformanceCell } from '../../utils/comparePerformance';
+import type { MetricSet, PerformanceCell } from '../../utils/comparePerformance';
 import { runColor } from '../../utils/runColors';
 
 interface AIBOMComparePerformanceTableProps {
   items: AIBOMResource[];
   runNames: string[];
+  /** Which metric family to compare; defaults to hardware (`resource_utilization`). */
+  set?: MetricSet;
 }
 
 const signColor = (value: number): 'green' | 'red' | undefined => {
@@ -24,9 +26,10 @@ const formatCell = (cell: PerformanceCell): string =>
 const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
   items,
   runNames,
+  set,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
-  const rows = buildPerformanceRows(items);
+  const rows = buildPerformanceRows(items, set);
   const showDelta = items.length === 2;
 
   return (
