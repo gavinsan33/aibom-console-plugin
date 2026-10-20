@@ -89,7 +89,7 @@ Or build, push, and deploy in one go:
 just deploy-local
 ```
 
-Images auto-build on every push to main via Quay's GitHub build trigger, pushing both `:latest` (mutable) and `:${commit_sha}` (immutable) tags. One-time setup: add a GitHub build trigger in the Quay UI for this repo (branch `main`, Dockerfile `/Dockerfile`).
+The image builds and pushes on every push to main via GitHub Actions (`.github/workflows/images.yml`), tagging both `:latest` (mutable) and `:${commit_sha}` (immutable). It uses the `QUAY_ROBOT_USERNAME`/`QUAY_ROBOT_TOKEN` secrets, which need push access to the Quay org.
 
 ### Helm chart
 
@@ -110,7 +110,7 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/gsanders/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
+This pulls the latest chart and image from `quay.io/project-aibom/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
 
 ### Common options
 
@@ -129,7 +129,7 @@ just deploy --repo=quay.io/your-org --values=values-prod.yaml
 Or use Helm directly:
 
 ```sh
-helm upgrade -i aibom-console-plugin oci://quay.io/gsanders/aibom-console-plugin \
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console-plugin \
   -n aibom-console-plugin --create-namespace
 ```
 

@@ -4,7 +4,7 @@ default:
 
 # quay.io org/user to push images and charts to, e.g. quay.io/<your-org>.
 # Override per-invocation with --repo=<repo>.
-default_repo := "quay.io/gsanders"
+default_repo := "quay.io/project-aibom"
 
 # --- Container image ---------------------------------------------------------
 
@@ -112,7 +112,7 @@ deploy-local *args: _check-auth
 # Install/upgrade the console plugin chart from Quay. Works once images are
 # built and pushed (via Quay's auto-build, `just docker-push`, or `just
 # deploy-local`). Seamless default: `just deploy` pulls the mutable-latest
-# tag from quay.io/gsanders/aibom-console-plugin. Override the repo or version
+# tag from quay.io/project-aibom/aibom-console-plugin. Override the repo or version
 # to deploy a different source or pin to an immutable sha tag.
 #
 # By default, `just deploy` requires cluster-admin to create cluster-scoped
