@@ -23,6 +23,7 @@ import {
 } from '../../types/aibom';
 import type { StoredTelemetry } from '../../types/telemetrySeries';
 import { toFlexNumber } from '../../utils/flexible';
+import { limitInSeriesUnit } from '../../utils/formatMetricValue';
 import { runColor } from '../../utils/runColors';
 import Section from '../detail/Section';
 import FitToDataSwitch from './FitToDataSwitch';
@@ -65,9 +66,12 @@ function buildChartSpecs(
       const metric = run?.metrics[metricKey];
       if (!run || !metric) return;
       unit ??= metric.unit;
-      limit ??= toFlexNumber(
-        items[colorIndex]?.spec?.data?.resource_utilization?.metrics?.[metricKey]?.limit,
-      );
+      if (limit === undefined) {
+        const rstats = items[colorIndex]?.spec?.data?.resource_utilization?.metrics?.[metricKey];
+        const rlimit = toFlexNumber(rstats?.limit);
+        // The series is in raw base units; the stored limit is in display units.
+        if (rlimit !== undefined) limit = limitInSeriesUnit(rlimit, rstats?.unit);
+      }
       runs.push({
         name: runNames[colorIndex],
         colorIndex,

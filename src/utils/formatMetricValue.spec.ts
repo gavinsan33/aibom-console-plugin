@@ -1,4 +1,4 @@
-import { formatMetricValue } from './formatMetricValue';
+import { formatMetricValue, limitInSeriesUnit } from './formatMetricValue';
 
 describe('formatMetricValue', () => {
   it('scales bytes-like units', () => {
@@ -18,5 +18,21 @@ describe('formatMetricValue', () => {
   it('prints the bare number for unknown or missing units', () => {
     expect(formatMetricValue(3.14159)).toBe('3.14');
     expect(formatMetricValue(7, 'mystery')).toBe('7');
+  });
+});
+
+describe('limitInSeriesUnit', () => {
+  it('scales display-unit limits back to the series raw base unit', () => {
+    expect(limitInSeriesUnit(8, 'GiB')).toBe(8 * 1024 ** 3); // -> bytes
+    expect(limitInSeriesUnit(8, 'GB')).toBe(8e9);
+    expect(limitInSeriesUnit(1000, 'Mbps')).toBe(1000 * (1e6 / 8)); // -> bytes_per_sec
+    expect(limitInSeriesUnit(50, 'MBps')).toBe(50e6);
+  });
+
+  it('leaves unscaled and unknown/missing units as-is', () => {
+    expect(limitInSeriesUnit(4, 'cores')).toBe(4);
+    expect(limitInSeriesUnit(250, 'watts')).toBe(250);
+    expect(limitInSeriesUnit(5, 'mystery')).toBe(5);
+    expect(limitInSeriesUnit(5)).toBe(5);
   });
 });

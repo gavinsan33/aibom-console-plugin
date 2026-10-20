@@ -6,6 +6,7 @@ import type { AIBOMResource } from '../../types/aibom';
 import { getJobName } from '../../utils/aibomFields';
 import { hasStoredTelemetryRef } from '../../utils/fetchStoredTelemetry';
 import { toFlexNumber } from '../../utils/flexible';
+import { limitInSeriesUnit } from '../../utils/formatMetricValue';
 import { useStoredTelemetry } from '../compare/useStoredTelemetry';
 import AIBOMStoredTelemetryCharts from './AIBOMStoredTelemetryCharts';
 
@@ -27,11 +28,13 @@ const AIBOMTelemetryTab: FC<AIBOMTelemetryTabProps> = ({ item }) => {
 
   const limits = useMemo(() => {
     const metrics = item.spec?.data?.resource_utilization?.metrics ?? {};
-    return Object.fromEntries(
-      Object.entries(metrics)
-        .map(([key, stats]) => [key, toFlexNumber(stats.limit)])
-        .filter(([, limit]) => limit !== undefined),
-    ) as Record<string, number>;
+    const out: Record<string, number> = {};
+    for (const [key, stats] of Object.entries(metrics)) {
+      const limit = toFlexNumber(stats.limit);
+      // The series is in raw base units; the stored limit is in display units.
+      if (limit !== undefined) out[key] = limitInSeriesUnit(limit, stats.unit);
+    }
+    return out;
   }, [item]);
 
   // No reference means nothing to wait for.
