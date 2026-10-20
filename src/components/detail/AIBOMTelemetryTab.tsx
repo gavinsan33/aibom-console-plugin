@@ -25,6 +25,15 @@ const AIBOMTelemetryTab: FC<AIBOMTelemetryTabProps> = ({ item }) => {
   const items = useMemo(() => [item], [item]);
   const { loading, byItem, mismatched } = useStoredTelemetry(items);
 
+  const limits = useMemo(() => {
+    const metrics = item.spec?.data?.resource_utilization?.metrics ?? {};
+    return Object.fromEntries(
+      Object.entries(metrics)
+        .map(([key, stats]) => [key, toFlexNumber(stats.limit)])
+        .filter(([, limit]) => limit !== undefined),
+    ) as Record<string, number>;
+  }, [item]);
+
   // No reference means nothing to wait for.
   if (hasStoredTelemetryRef(item) && loading) {
     return (
@@ -37,15 +46,6 @@ const AIBOMTelemetryTab: FC<AIBOMTelemetryTabProps> = ({ item }) => {
   const jobName = getJobName(item); // '' when unset, hence not `??`
   const name = jobName === '' ? (item.metadata?.name ?? '') : jobName;
   const stored = byItem[0];
-
-  const limits = useMemo(() => {
-    const metrics = item.spec?.data?.resource_utilization?.metrics ?? {};
-    return Object.fromEntries(
-      Object.entries(metrics)
-        .map(([key, stats]) => [key, toFlexNumber(stats?.limit)])
-        .filter(([, limit]) => limit !== undefined),
-    ) as Record<string, number>;
-  }, [item]);
 
   if (stored) {
     return (

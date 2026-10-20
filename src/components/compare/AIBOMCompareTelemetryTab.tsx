@@ -77,7 +77,15 @@ function buildChartSpecs(
       });
     });
     return runs.length > 0
-      ? [{ key: `${keyPrefix}-${metricKey}`, title: labels[metricKey] ?? metricKey, unit, runs, limit }]
+      ? [
+          {
+            key: `${keyPrefix}-${metricKey}`,
+            title: labels[metricKey] ?? metricKey,
+            unit,
+            runs,
+            limit,
+          },
+        ]
       : [];
   });
 }

@@ -131,23 +131,25 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
             }}
           />
         ))}
-        {limit !== undefined && limit > 0 && (() => {
-          const maxX = xMax ?? Math.max(0, ...lines.flatMap((l) => l.points.map((p) => p.x)));
-          return (
-            <ChartLine
-              data={[
-                { x: 0, y: limit },
-                { x: maxX, y: limit },
-              ]}
-              style={{
-                data: {
-                  stroke: '#C9190B',
-                  strokeWidth: 1.5,
-                },
-              }}
-            />
-          );
-        })()}
+        {limit !== undefined &&
+          limit > 0 &&
+          (() => {
+            const maxX = xMax ?? Math.max(0, ...lines.flatMap((l) => l.points.map((p) => p.x)));
+            return (
+              <ChartLine
+                data={[
+                  { x: 0, y: limit },
+                  { x: maxX, y: limit },
+                ]}
+                style={{
+                  data: {
+                    stroke: '#C9190B',
+                    strokeWidth: 1.5,
+                  },
+                }}
+              />
+            );
+          })()}
       </Chart>
     </div>
   );
