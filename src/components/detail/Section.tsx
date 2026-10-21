@@ -14,7 +14,7 @@ interface SectionProps {
 /** A titled card in the Detail page's grid, the common wrapper every section renders itself in for consistent spacing/boundaries and horizontal layout. */
 const Section: FC<SectionProps> = ({ title, children, span = 12, md }) => (
   <GridItem span={span} md={md ?? span}>
-    <Card>
+    <Card isFullHeight>
       <CardTitle>{title}</CardTitle>
       <CardBody>{children}</CardBody>
     </Card>
