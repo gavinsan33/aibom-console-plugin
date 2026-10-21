@@ -211,7 +211,7 @@ export const HARDWARE_METRIC_LABELS: Record<string, string> = {
   storage_write_throughput: 'Storage Write',
 };
 
-/** `inference.performance.metrics` key order/labels, mirroring `oc-aibom`'s `vllmMetricOrder`/`vllmMetricLabels`. */
+/** `inference.performance.metrics` key order/labels, mirroring `oc-aibom`'s `servingMetricOrder`/`servingMetricLabels`. */
 export const INFERENCE_METRIC_ORDER = [
   'time_to_first_token_seconds',
   'inter_token_latency_seconds',
