@@ -1,16 +1,22 @@
 import type { FC } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Checkbox,
   Content,
   FormSelect,
   FormSelectOption,
+  MenuToggle,
+  Select,
+  SelectList,
+  SelectOption,
   Toolbar,
   ToolbarContent,
+  ToolbarFilter,
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
+import type { MenuToggleElement } from '@patternfly/react-core';
 import type { AIBOMFilter } from '../utils/filter';
 import type { AIBOMResource, SortKey } from '../types/aibom';
 import { HARDWARE_METRIC_LABELS, SORTABLE_METRICS } from '../types/aibom';
@@ -59,8 +65,6 @@ interface AIBOMFilterToolbarProps {
   onSortChange: (sortKey: SortKey, ascending: boolean) => void;
 }
 
-const ALL_VALUE = '';
-
 const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
   items,
   filter,
@@ -69,6 +73,12 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
   onSortChange,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
+
+  // Which field the value selector currently edits. Applied filters live in
+  // `filter` (URL state); this is just the toolbar's own attribute selection.
+  const [activeField, setActiveField] = useState<FilterField>(FIELD_CONFIG[0].field);
+  const [isAttrOpen, setAttrOpen] = useState(false);
+  const [isValueOpen, setValueOpen] = useState(false);
 
   const optionsByField = useMemo(() => {
     const result = {} as Record<FilterField, string[]>;
@@ -83,44 +93,117 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
     return result;
   }, [items]);
 
+  const activeLabel = FIELD_CONFIG.find((c) => c.field === activeField)?.label ?? '';
+
   return (
     <Toolbar
       clearAllFilters={() => {
         onFilterChange({});
       }}
+      collapseListedFiltersBreakpoint="xl"
     >
       <ToolbarContent>
         <ToolbarGroup variant="filter-group">
-          {FIELD_CONFIG.map(({ field, label }) => (
-            <ToolbarItem key={field}>
-              <FormSelect
-                aria-label={t(label)}
-                value={filter[field] ?? ALL_VALUE}
-                onChange={(_event, value) => {
-                  onFilterChange({ ...filter, [field]: value || undefined });
-                }}
-              >
-                <FormSelectOption
-                  value={ALL_VALUE}
-                  label={t('All {{label}}', { label: t(label) })}
-                />
-                {optionsByField[field].map((value) => (
-                  <FormSelectOption key={value} value={value} label={value} />
-                ))}
-              </FormSelect>
-            </ToolbarItem>
-          ))}
+          {/* Attribute selector — pick which field to filter on. */}
           <ToolbarItem>
+            <Select
+              aria-label={t('Filter by')}
+              isOpen={isAttrOpen}
+              onOpenChange={setAttrOpen}
+              selected={activeField}
+              onSelect={(_event, value) => {
+                setActiveField(value as FilterField);
+                setAttrOpen(false);
+              }}
+              toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  onClick={() => {
+                    setAttrOpen((open) => !open);
+                  }}
+                  isExpanded={isAttrOpen}
+                >
+                  {t(activeLabel)}
+                </MenuToggle>
+              )}
+            >
+              <SelectList>
+                {FIELD_CONFIG.map(({ field, label }) => (
+                  <SelectOption key={field} value={field}>
+                    {t(label)}
+                  </SelectOption>
+                ))}
+              </SelectList>
+            </Select>
+          </ToolbarItem>
+
+          {/* One ToolbarFilter per field so every applied value shows a chip;
+              only the active field's value selector is visible. */}
+          {FIELD_CONFIG.map(({ field, label }) => {
+            const applied = filter[field];
+            return (
+              <ToolbarFilter
+                key={field}
+                categoryName={t(label)}
+                labels={applied ? [applied] : []}
+                deleteLabel={() => {
+                  onFilterChange({ ...filter, [field]: undefined });
+                }}
+                showToolbarItem={field === activeField}
+              >
+                <Select
+                  aria-label={t(label)}
+                  isOpen={isValueOpen}
+                  onOpenChange={setValueOpen}
+                  selected={applied ?? null}
+                  onSelect={(_event, value) => {
+                    onFilterChange({ ...filter, [field]: (value as string) || undefined });
+                    setValueOpen(false);
+                  }}
+                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                    <MenuToggle
+                      ref={toggleRef}
+                      onClick={() => {
+                        setValueOpen((open) => !open);
+                      }}
+                      isExpanded={isValueOpen}
+                      style={{ width: '18ch' }}
+                    >
+                      {applied ?? t('Filter by {{label}}', { label: t(label) })}
+                    </MenuToggle>
+                  )}
+                >
+                  <SelectList>
+                    {optionsByField[field].map((value) => (
+                      <SelectOption key={value} value={value}>
+                        {value}
+                      </SelectOption>
+                    ))}
+                  </SelectList>
+                </Select>
+              </ToolbarFilter>
+            );
+          })}
+
+          <ToolbarFilter
+            categoryName={t('Drift')}
+            labels={filter.driftOnly ? [t('Drift only')] : []}
+            deleteLabel={() => {
+              onFilterChange({ ...filter, driftOnly: undefined });
+            }}
+            showToolbarItem
+          >
             <Checkbox
               id="aibom-drift-only"
               label={t('Drift only')}
               isChecked={!!filter.driftOnly}
               onChange={(_event, checked) => {
-                onFilterChange({ ...filter, driftOnly: checked });
+                onFilterChange({ ...filter, driftOnly: checked || undefined });
               }}
             />
-          </ToolbarItem>
+          </ToolbarFilter>
         </ToolbarGroup>
+
         <ToolbarGroup align={{ default: 'alignEnd' }}>
           <ToolbarItem>
             <Content component="small">{t('Sort by')}</Content>
