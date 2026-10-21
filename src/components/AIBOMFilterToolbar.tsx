@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Checkbox,
@@ -7,6 +7,7 @@ import {
   FormSelect,
   FormSelectOption,
   MenuToggle,
+  SearchInput,
   Select,
   SelectList,
   SelectOption,
@@ -18,47 +19,28 @@ import {
 } from '@patternfly/react-core';
 import type { MenuToggleElement } from '@patternfly/react-core';
 import type { AIBOMFilter } from '../utils/filter';
-import type { AIBOMResource, SortKey } from '../types/aibom';
+import type { SortKey } from '../types/aibom';
 import { HARDWARE_METRIC_LABELS, SORTABLE_METRICS } from '../types/aibom';
 import { defaultAscending } from '../utils/listUrlState';
-import {
-  getAdaptationMethod,
-  getArchitecture,
-  getExperimentIntent,
-  getFramework,
-  getGitBranch,
-  getGitRepository,
-  getGpuType,
-  getJobName,
-  getModelName,
-  getOptimizer,
-  getQuantization,
-  getServingEngine,
-} from '../utils/aibomFields';
 
 type FilterField = keyof Omit<AIBOMFilter, 'driftOnly'>;
 
-const FIELD_CONFIG: {
-  field: FilterField;
-  label: string;
-  getValue: (a: AIBOMResource) => string;
-}[] = [
-  { field: 'model', label: 'Model', getValue: getModelName },
-  { field: 'intent', label: 'Experiment intent', getValue: getExperimentIntent },
-  { field: 'quantization', label: 'Quantization', getValue: getQuantization },
-  { field: 'architecture', label: 'Architecture', getValue: getArchitecture },
-  { field: 'framework', label: 'Framework', getValue: getFramework },
-  { field: 'gpuType', label: 'GPU type', getValue: getGpuType },
-  { field: 'jobName', label: 'Job', getValue: getJobName },
-  { field: 'gitBranch', label: 'Git branch', getValue: getGitBranch },
-  { field: 'gitRepository', label: 'Git repository', getValue: getGitRepository },
-  { field: 'servingEngine', label: 'Serving engine', getValue: getServingEngine },
-  { field: 'adaptationMethod', label: 'Adaptation method', getValue: getAdaptationMethod },
-  { field: 'optimizer', label: 'Optimizer', getValue: getOptimizer },
+const FIELD_CONFIG: { field: FilterField; label: string }[] = [
+  { field: 'model', label: 'Model' },
+  { field: 'intent', label: 'Experiment intent' },
+  { field: 'quantization', label: 'Quantization' },
+  { field: 'architecture', label: 'Architecture' },
+  { field: 'framework', label: 'Framework' },
+  { field: 'gpuType', label: 'GPU type' },
+  { field: 'jobName', label: 'Job' },
+  { field: 'gitBranch', label: 'Git branch' },
+  { field: 'gitRepository', label: 'Git repository' },
+  { field: 'servingEngine', label: 'Serving engine' },
+  { field: 'adaptationMethod', label: 'Adaptation method' },
+  { field: 'optimizer', label: 'Optimizer' },
 ];
 
 interface AIBOMFilterToolbarProps {
-  items: AIBOMResource[];
   filter: AIBOMFilter;
   onFilterChange: (filter: AIBOMFilter) => void;
   sortKey: SortKey;
@@ -66,7 +48,6 @@ interface AIBOMFilterToolbarProps {
 }
 
 const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
-  items,
   filter,
   onFilterChange,
   sortKey,
@@ -74,24 +55,10 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
 
-  // Which field the value selector currently edits. Applied filters live in
-  // `filter` (URL state); this is just the toolbar's own attribute selection.
+  // Which field the search box filters on. Applied filters live in `filter`
+  // (URL state); this is just the toolbar's own attribute selection.
   const [activeField, setActiveField] = useState<FilterField>(FIELD_CONFIG[0].field);
   const [isAttrOpen, setAttrOpen] = useState(false);
-  const [isValueOpen, setValueOpen] = useState(false);
-
-  const optionsByField = useMemo(() => {
-    const result = {} as Record<FilterField, string[]>;
-    for (const { field, getValue } of FIELD_CONFIG) {
-      const values = new Set<string>();
-      items.forEach((item) => {
-        const value = getValue(item);
-        if (value) values.add(value);
-      });
-      result[field] = Array.from(values).sort((a, b) => a.localeCompare(b));
-    }
-    return result;
-  }, [items]);
 
   const activeLabel = FIELD_CONFIG.find((c) => c.field === activeField)?.label ?? '';
 
@@ -103,8 +70,8 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
       collapseListedFiltersBreakpoint="xl"
     >
       <ToolbarContent>
-        <ToolbarGroup variant="filter-group">
-          {/* Attribute selector — pick which field to filter on. */}
+        <ToolbarGroup variant="filter-group" gap={{ default: 'gapMd' }}>
+          {/* Attribute selector — pick which field to search within. */}
           <ToolbarItem>
             <Select
               aria-label={t('Filter by')}
@@ -137,8 +104,8 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
             </Select>
           </ToolbarItem>
 
-          {/* One ToolbarFilter per field so every applied value shows a chip;
-              only the active field's value selector is visible. */}
+          {/* One ToolbarFilter per field so every applied search shows a chip;
+              only the active field's search input is visible. */}
           {FIELD_CONFIG.map(({ field, label }) => {
             const applied = filter[field];
             return (
@@ -151,36 +118,17 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
                 }}
                 showToolbarItem={field === activeField}
               >
-                <Select
-                  aria-label={t(label)}
-                  isOpen={isValueOpen}
-                  onOpenChange={setValueOpen}
-                  selected={applied ?? null}
-                  onSelect={(_event, value) => {
-                    onFilterChange({ ...filter, [field]: (value as string) || undefined });
-                    setValueOpen(false);
+                <SearchInput
+                  aria-label={t('Search {{label}}', { label: t(label) })}
+                  placeholder={t('Search {{label}}', { label: t(label) })}
+                  value={applied ?? ''}
+                  onChange={(_event, value) => {
+                    onFilterChange({ ...filter, [field]: value || undefined });
                   }}
-                  toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                    <MenuToggle
-                      ref={toggleRef}
-                      onClick={() => {
-                        setValueOpen((open) => !open);
-                      }}
-                      isExpanded={isValueOpen}
-                      style={{ width: '18ch' }}
-                    >
-                      {applied ?? t('Filter by {{label}}', { label: t(label) })}
-                    </MenuToggle>
-                  )}
-                >
-                  <SelectList>
-                    {optionsByField[field].map((value) => (
-                      <SelectOption key={value} value={value}>
-                        {value}
-                      </SelectOption>
-                    ))}
-                  </SelectList>
-                </Select>
+                  onClear={() => {
+                    onFilterChange({ ...filter, [field]: undefined });
+                  }}
+                />
               </ToolbarFilter>
             );
           })}
@@ -204,7 +152,7 @@ const AIBOMFilterToolbar: FC<AIBOMFilterToolbarProps> = ({
           </ToolbarFilter>
         </ToolbarGroup>
 
-        <ToolbarGroup align={{ default: 'alignEnd' }}>
+        <ToolbarGroup align={{ default: 'alignEnd' }} gap={{ default: 'gapSm' }}>
           <ToolbarItem>
             <Content component="small">{t('Sort by')}</Content>
           </ToolbarItem>

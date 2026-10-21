@@ -128,7 +128,6 @@ const AIBOMListPage: FC = () => {
         ) : (
           <>
             <AIBOMFilterToolbar
-              items={items}
               filter={filter}
               onFilterChange={setFilter}
               sortKey={sortKey}
