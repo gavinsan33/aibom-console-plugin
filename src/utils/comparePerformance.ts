@@ -11,13 +11,13 @@ import {
   getMetricAvg,
   getMetricUnit,
   getResourceUtilizationNote,
-  hasNoInferenceMetrics,
+  hasInferenceMetric,
 } from './aibomFields';
 
 export interface PerformanceCell {
   avg: number;
   unit: string;
-  /** True when this item's own telemetry was unavailable (`resource_utilization.note` set) -- the avg is a meaningless 0 in that case, render "—" instead. */
+  /** True when this item has no value for this metric (hardware: `resource_utilization.note` set; inference: the engine didn't export it) -- the avg is a meaningless 0 in that case, render "—" instead. */
   unavailable: boolean;
 }
 
@@ -35,7 +35,7 @@ export interface MetricSet {
   labels: Record<string, string>;
   getAvg: (a: AIBOMResource, key: string) => number;
   getUnit: (a: AIBOMResource, key: string) => string;
-  unavailable: (a: AIBOMResource) => boolean;
+  unavailable: (a: AIBOMResource, key: string) => boolean;
 }
 
 const HARDWARE: MetricSet = {
@@ -51,14 +51,17 @@ export const INFERENCE: MetricSet = {
   labels: INFERENCE_METRIC_LABELS,
   getAvg: getInferenceMetricAvg,
   getUnit: getInferenceMetricUnit,
-  unavailable: hasNoInferenceMetrics,
+  // Per metric: engines export different subsets (TGI has no TTFT, KV-cache
+  // or prompt throughput), so a run with some inference metrics can still
+  // lack this one.
+  unavailable: (a, key) => !hasInferenceMetric(a, key),
 };
 
 /**
  * One row per metric (hardware by default), one value per selected item --
  * mirrors `oc-aibom`'s `DiffPerformance` (2 items: value + delta/pct-change)
  * and `compare` (N items: value only), unified into a single N-scalable shape.
- * Pass `INFERENCE` for the vLLM serving metrics instead.
+ * Pass `INFERENCE` for the serving-engine metrics instead.
  */
 export function buildPerformanceRows(
   items: AIBOMResource[],
@@ -68,7 +71,7 @@ export function buildPerformanceRows(
     const values = items.map((item) => ({
       avg: set.getAvg(item, metricKey),
       unit: set.getUnit(item, metricKey),
-      unavailable: set.unavailable(item),
+      unavailable: set.unavailable(item, metricKey),
     }));
 
     const row: PerformanceRow = {
@@ -77,7 +80,8 @@ export function buildPerformanceRows(
       values,
     };
 
-    if (items.length === 2) {
+    // No delta against a run without data: its 0 is a placeholder.
+    if (items.length === 2 && !values[0].unavailable && !values[1].unavailable) {
       const [a, b] = values;
       row.delta = b.avg - a.avg;
       row.pctChange = a.avg === 0 ? undefined : ((b.avg - a.avg) / a.avg) * 100;
