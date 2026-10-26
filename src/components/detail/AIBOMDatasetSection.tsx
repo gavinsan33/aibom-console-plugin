@@ -35,8 +35,17 @@ const AIBOMDatasetSection: FC<AIBOMDatasetSectionProps> = ({ dataset }) => {
                 {(d.seen_via ?? []).join(', ')})
               </FlexItem>
               <FlexItem>
-                <Label color={d.matches_declared ? 'green' : 'red'}>
-                  {d.matches_declared ? t('matches declared') : t('DOES NOT MATCH DECLARED')}
+                {/* null/undefined = not reconciled (declared was itself inferred
+                    from runtime, so there's nothing independent to compare) --
+                    distinct from false, a genuine declared-vs-detected mismatch. */}
+                <Label
+                  color={d.matches_declared == null ? 'grey' : d.matches_declared ? 'green' : 'red'}
+                >
+                  {d.matches_declared == null
+                    ? t('not reconciled (declared inferred from runtime)')
+                    : d.matches_declared
+                      ? t('matches declared')
+                      : t('DOES NOT MATCH DECLARED')}
                 </Label>
               </FlexItem>
             </Flex>

@@ -73,7 +73,9 @@ export interface AIBOMData {
       dataset_name?: string;
       version?: string;
       license?: string;
-      matches_declared?: boolean;
+      // null = not reconciled (declared inferred from runtime); distinct from
+      // false (a genuine declared-vs-detected mismatch).
+      matches_declared?: boolean | null;
       seen_via?: string[];
     }[];
   };
