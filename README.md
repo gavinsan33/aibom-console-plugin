@@ -99,9 +99,9 @@ Push the chart to Quay (requires `helm registry login quay.io`):
 just chart-push
 ```
 
-This publishes a dev build, `<Chart.yaml version>-<git sha>` (e.g., `0.1.0-abc1234`), which Helm skips unless you pass `--devel` or the exact version. CI does this on every merge to `main` that touches the chart.
+This publishes a dev build versioned from the latest release tag: the next patch, the commits since the tag and the SHA (e.g., `0.1.1-dev.5.gabc1234` five commits after `v0.1.0`). Helm skips it unless you pass `--devel` or the exact version. CI does this on every merge to `main` that touches the chart.
 
-**Releases.** Push a `vX.Y.Z` tag. `.github/workflows/release.yml` builds the image as `quay.io/project-aibom/aibom-console-plugin:X.Y.Z`, then runs `just chart-push --version=X.Y.Z`, which publishes the chart with `version` and `appVersion` set to `X.Y.Z`, so its image defaults to that build. A release is only ever pushed once. After tagging, bump `version` in `charts/aibom-console/Chart.yaml` to the next planned release, so dev builds sort after it.
+**Releases.** Push a `vX.Y.Z` tag. `.github/workflows/release.yml` builds the image as `quay.io/project-aibom/aibom-console-plugin:X.Y.Z`, then runs `just chart-push --version=X.Y.Z`, which publishes the chart with `version` and `appVersion` set to `X.Y.Z`, so its image defaults to that build. A release is only ever pushed once. `Chart.yaml`'s `version` is unused and never needs bumping.
 
 ## Deployment
 

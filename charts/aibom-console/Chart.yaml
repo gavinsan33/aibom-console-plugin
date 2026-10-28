@@ -2,5 +2,6 @@ apiVersion: v2
 name: aibom-console
 description: Helm chart deploying the AIBOM OpenShift console plugin
 type: application
-version: 0.1.0
+# Unused: chart-push versions every build from git tags.
+version: 0.0.0
 appVersion: "latest"
