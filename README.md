@@ -99,7 +99,9 @@ Push the chart to Quay (requires `helm registry login quay.io`):
 just chart-push
 ```
 
-This publishes both a mutable version tag (e.g., `0.1.0`) and an immutable SHA-pinned tag (e.g., `0.1.0-abc1234`) for rollback safety.
+This publishes a dev build, `<Chart.yaml version>-<git sha>` (e.g., `0.1.0-abc1234`), which Helm skips unless you pass `--devel` or the exact version. CI does this on every merge to `main` that touches the chart.
+
+**Releases.** Push a `vX.Y.Z` tag. `.github/workflows/release.yml` builds the image as `quay.io/project-aibom/aibom-console-plugin:X.Y.Z`, then runs `just chart-push --version=X.Y.Z`, which publishes the chart with `version` and `appVersion` set to `X.Y.Z`, so its image defaults to that build. A release is only ever pushed once. After tagging, bump `version` in `charts/aibom-console/Chart.yaml` to the next planned release, so dev builds sort after it.
 
 ## Deployment
 
@@ -110,14 +112,15 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/project-aibom/aibom-console-plugin` and installs to the `aibom-console-plugin` namespace.
+This installs the newest release of the `oci://quay.io/project-aibom/aibom-console` chart, which runs the image built for that release, into the `aibom-console-plugin` namespace.
 
 ### Common options
 
-Pin a specific version:
+Pin a release, or install the newest dev build from `main`:
 
 ```sh
-just deploy --version=0.1.0-abc1234
+just deploy --version=0.1.0
+just deploy --devel
 ```
 
 Deploy from a different Quay org or with custom values:

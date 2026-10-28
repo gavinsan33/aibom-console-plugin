@@ -7,14 +7,15 @@ oc login
 just deploy
 ```
 
-This pulls the latest chart and image from `quay.io/project-aibom/aibom-console-plugin` and installs to the `project-aibom` namespace. Pass `--namespace=<ns>` to change it.
+This installs the newest release of the `oci://quay.io/project-aibom/aibom-console` chart, which runs the image built for that release, into the `aibom-console-plugin` namespace. Pass `--namespace=<ns>` to change it.
 
 ## Common options
 
-Pin a specific version:
+Pin a release, or install the newest dev build from `main`:
 
 ```sh
-just deploy --version=0.1.0-abc1234
+just deploy --version=0.1.0
+just deploy --devel
 ```
 
 Deploy from a different Quay org or with custom values:
@@ -75,7 +76,7 @@ just docker-push     # push to Quay (requires `docker login quay.io`)
 just deploy-local    # build, push and deploy in one go
 ```
 
-Images auto-build on every push to `main` through Quay's GitHub build trigger, pushing both `:latest` (mutable) and `:<commit_sha>` (immutable) tags. One-time setup: add a GitHub build trigger in the Quay UI for this repository (branch `main`, Dockerfile `/Dockerfile`).
+Every push to `main` builds the image through `.github/workflows/images.yml`, tagged `:latest` and `:<short sha>`.
 
 ### Helm chart
 
@@ -83,4 +84,6 @@ Images auto-build on every push to `main` through Quay's GitHub build trigger, p
 just chart-push      # requires `helm registry login quay.io`
 ```
 
-This publishes both a mutable version tag (for example `0.1.0`) and an immutable, SHA-pinned tag (for example `0.1.0-abc1234`) for rollback safety.
+Without `--version`, this publishes a dev build, `<Chart.yaml version>-<git sha>` (for example `0.1.0-abc1234`). Helm skips these unless you pass `--devel` or the exact version. CI does this on every merge to `main` that touches the chart.
+
+**Releases.** Push a `vX.Y.Z` tag. `.github/workflows/release.yml` builds the image as `quay.io/project-aibom/aibom-console-plugin:X.Y.Z`, then runs `just chart-push --version=X.Y.Z`, which publishes the chart with `version` and `appVersion` set to `X.Y.Z`, so its image defaults to that build. A release is only ever pushed once. After tagging, bump `version` in `charts/aibom-console/Chart.yaml` to the next planned release, so dev builds sort after it.
