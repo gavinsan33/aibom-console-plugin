@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DescriptionList, Grid, GridItem, Stack, StackItem, Title } from '@patternfly/react-core';
+import { DescriptionList, Grid, GridItem, Title } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { toFlexNumber } from '../../utils/flexible';
 import Field from './Field';
@@ -30,7 +30,7 @@ const formatGpuMemory = (mb: (number | string)[]): string | undefined => {
 const hasEntries = (rec?: Record<string, unknown>): rec is Record<string, unknown> =>
   !!rec && Object.keys(rec).length > 0;
 
-/** Breakdown of the extra discovery data: one titled block per group. */
+/** Breakdown of the extra discovery data: one titled block per group. No `Stack` wrapper: it's `height: 100%`, and as the card body's second child that overflowed the card by the height of the field list above it. */
 const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
 
@@ -79,34 +79,22 @@ const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) =>
   if (visibleGroups.length === 0) return null;
 
   return (
-    <>
-      <Stack hasGutter>
-        {visibleGroups.length > 0 && (
-          <StackItem>
-            <Grid hasGutter>
-              {visibleGroups.map((g) => (
-                <GridItem key={g.title} md={6}>
-                  <Title headingLevel="h4" size="md">
-                    {g.title}
-                  </Title>
-                  <DescriptionList
-                    isHorizontal
-                    isCompact
-                    horizontalTermWidthModifier={{ default: '22ch' }}
-                  >
-                    {g.fields.map(([key, label]) => (
-                      <Field key={key} label={label}>
-                        {g.data?.[key] === undefined ? undefined : formatValue(g.data[key])}
-                      </Field>
-                    ))}
-                  </DescriptionList>
-                </GridItem>
-              ))}
-            </Grid>
-          </StackItem>
-        )}
-      </Stack>
-    </>
+    <Grid hasGutter>
+      {visibleGroups.map((g) => (
+        <GridItem key={g.title} md={6}>
+          <Title headingLevel="h4" size="md">
+            {g.title}
+          </Title>
+          <DescriptionList isHorizontal isCompact horizontalTermWidthModifier={{ default: '22ch' }}>
+            {g.fields.map(([key, label]) => (
+              <Field key={key} label={label}>
+                {g.data?.[key] === undefined ? undefined : formatValue(g.data[key])}
+              </Field>
+            ))}
+          </DescriptionList>
+        </GridItem>
+      ))}
+    </Grid>
   );
 };
 
