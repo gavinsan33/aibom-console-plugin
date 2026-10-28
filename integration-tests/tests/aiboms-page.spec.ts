@@ -16,7 +16,7 @@ function exec(command: string, timeoutMs = 360000) {
 
 function installHelmChart() {
   exec(
-    `helm upgrade -i ${PLUGIN_NAME} charts/openshift-console-plugin -n ${PLUGIN_NAME} --create-namespace --set plugin.image=${PLUGIN_PULL_SPEC}`,
+    `helm upgrade -i ${PLUGIN_NAME} charts/aibom-console -n ${PLUGIN_NAME} --create-namespace --set plugin.image=${PLUGIN_PULL_SPEC}`,
   );
   exec(`oc rollout status -n ${PLUGIN_NAME} deploy/${PLUGIN_NAME} -w --timeout=300s`);
   exec('oc rollout status -w deploy/console -n openshift-console --timeout=300s');

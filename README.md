@@ -129,8 +129,8 @@ just deploy --repo=quay.io/your-org --values=values-prod.yaml
 Or use Helm directly:
 
 ```sh
-helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console-plugin \
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console \
   -n aibom-console-plugin --create-namespace
 ```
 
-See `charts/aibom-console-plugin/values.yaml` for all configuration options.
+See `charts/aibom-console/values.yaml` for all configuration options.

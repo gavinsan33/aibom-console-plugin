@@ -231,7 +231,7 @@ adding/changing translatable strings to update `locales/en/`.
 
 ## Build & Deployment
 
-Helm chart: `charts/aibom-console-plugin` (from the template, values
+Helm chart: `charts/aibom-console` (from the template, values
 defaulted to this plugin's name/description). Its `patch-consoles` Job
 auto-registers the plugin on the cluster's `Console` CR — no manual RBAC
 edit needed by default. The plugin's own ServiceAccount has **no** RBAC

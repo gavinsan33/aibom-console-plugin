@@ -103,7 +103,7 @@ deploy-local *args: _check-auth
     [[ "$skip_patcher" = true ]] && values_args+=(--set plugin.jobs.patchConsoles.enabled=false)
     kube_as_user_args=()
     [[ "$skip_plugin_cr" = true && "$skip_patcher" = true ]] || kube_as_user_args=(--kube-as-user=system:admin)
-    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console-plugin" \
+    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console" \
         -n "$namespace" --create-namespace \
         --set plugin.image="$img_ref" \
         "${kube_as_user_args[@]}" \
@@ -149,7 +149,7 @@ deploy *args: _check-auth
     [[ "$skip_patcher" = true ]] && values_args+=(--set plugin.jobs.patchConsoles.enabled=false)
     kube_as_user_args=()
     [[ "$skip_plugin_cr" = true && "$skip_patcher" = true ]] || kube_as_user_args=(--kube-as-user=system:admin)
-    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console-plugin" \
+    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console" \
         -n "$namespace" --create-namespace \
         --version "$version" \
         "${kube_as_user_args[@]}" \
@@ -180,7 +180,7 @@ uninstall *args: _check-auth
 # --- Chart publishing --------------------------------------------------------
 #
 # Packages the console plugin chart and pushes it as an OCI artifact to Quay,
-# so `helm upgrade --install ... oci://quay.io/<org>/aibom-console-plugin`
+# so `helm upgrade --install ... oci://quay.io/<org>/aibom-console`
 # works with no checked-out copy of this repo. One-time setup: `helm registry
 # login quay.io` with an account/robot that has push access under that org,
 # and (in the Quay UI) make the chart repo public, or install accepts
@@ -190,7 +190,7 @@ uninstall *args: _check-auth
 # mutable-latest/immutable-<sha> split:
 #   - <Chart.yaml version> (e.g. 0.1.0) — mutable, overwritten on every
 #     chart-push, since Chart.yaml's version isn't bumped automatically.
-#     `helm upgrade --install ... oci://.../aibom-console-plugin` with no
+#     `helm upgrade --install ... oci://.../aibom-console` with no
 #     --version resolves here.
 #   - <Chart.yaml version>-<git sha> (e.g. 0.1.0-abc1234, "-dirty" suffixed if
 #     the working tree has uncommitted changes) — immutable, one per
@@ -212,7 +212,7 @@ chart-push *args:
     trap 'rm -rf "$pkg_dir"' EXIT
     sha="$(git rev-parse --short HEAD)"
     git diff --quiet HEAD || sha="${sha}-dirty"
-    chart_dir="aibom-console-plugin"
+    chart_dir="aibom-console"
     chart_name="$(grep '^name:' "charts/$chart_dir/Chart.yaml" | awk '{print $2}')"
     base_version="$(grep '^version:' "charts/$chart_dir/Chart.yaml" | awk '{print $2}')"
     pinned_version="${base_version}-${sha}"
