@@ -94,7 +94,8 @@ deploy-local *args: _check-auth
         version="$(git rev-parse --short HEAD)"
         git diff --quiet HEAD || version="${version}-dirty"
     fi
-    img_ref="${repo}/aibom-console-plugin:${version}"
+    img_repo="${repo}/aibom-console-plugin"
+    img_ref="${img_repo}:${version}"
     "$engine" build -t "$img_ref" .
     "$engine" push "$img_ref"
     values_args=()
@@ -103,17 +104,17 @@ deploy-local *args: _check-auth
     [[ "$skip_patcher" = true ]] && values_args+=(--set plugin.jobs.patchConsoles.enabled=false)
     kube_as_user_args=()
     [[ "$skip_plugin_cr" = true && "$skip_patcher" = true ]] || kube_as_user_args=(--kube-as-user=system:admin)
-    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console-plugin" \
+    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console" \
         -n "$namespace" --create-namespace \
-        --set plugin.image="$img_ref" \
+        --set plugin.image.repository="$img_repo" --set-string plugin.image.tag="$version" \
         "${kube_as_user_args[@]}" \
         "${values_args[@]}"
 
 # Install/upgrade the console plugin chart from Quay. Works once images are
 # built and pushed (via Quay's auto-build, `just docker-push`, or `just
-# deploy-local`). Seamless default: `just deploy` pulls the mutable-latest
-# tag from quay.io/project-aibom/aibom-console-plugin. Override the repo or version
-# to deploy a different source or pin to an immutable sha tag.
+# deploy-local`). Seamless default: `just deploy` installs the newest release
+# of oci://quay.io/project-aibom/aibom-console. Pass --version to pin a release
+# or a dev build (X.Y.Z-<sha>), or --devel for the newest dev build from main.
 #
 # By default, `just deploy` requires cluster-admin to create cluster-scoped
 # resources (ConsolePlugin CR, ClusterRole/ClusterRoleBinding, patcher Job).
@@ -121,13 +122,13 @@ deploy-local *args: _check-auth
 # must create it manually). Pass --skip-patcher to only disable the auto-patcher
 # job. Use both flags together to deploy with no cluster-admin access.
 #
-# Usage: just deploy [--repo=<repo>] [--version=<tag>] [--values=<file>] [--namespace=<ns>] [--skip-plugin-cr] [--skip-patcher]
+# Usage: just deploy [--repo=<repo>] [--version=<version> | --devel] [--values=<file>] [--namespace=<ns>] [--skip-plugin-cr] [--skip-patcher]
 [group('deploy')]
 deploy *args: _check-auth
     #!/usr/bin/env bash
     set -euo pipefail
     repo="{{ default_repo }}"
-    version="latest"
+    version_args=()
     values_file=""
     namespace="aibom-console-plugin"
     skip_plugin_cr=false
@@ -135,12 +136,13 @@ deploy *args: _check-auth
     for arg in {{ args }}; do
         case "$arg" in
             --repo=*) repo="${arg#--repo=}" ;;
-            --version=*) version="${arg#--version=}" ;;
+            --version=*) version_args=(--version "${arg#--version=}") ;;
+            --devel) version_args=(--devel) ;;
             --values=*) values_file="${arg#--values=}" ;;
             --namespace=*) namespace="${arg#--namespace=}" ;;
             --skip-plugin-cr) skip_plugin_cr=true ;;
             --skip-patcher) skip_patcher=true ;;
-            *) echo "error: unknown argument '$arg' (expected --repo=<repo>, --version=<tag>, --values=<file>, --namespace=<ns>, --skip-plugin-cr, or --skip-patcher)" >&2; exit 1 ;;
+            *) echo "error: unknown argument '$arg' (expected --repo=<repo>, --version=<version>, --devel, --values=<file>, --namespace=<ns>, --skip-plugin-cr, or --skip-patcher)" >&2; exit 1 ;;
         esac
     done
     values_args=()
@@ -149,9 +151,9 @@ deploy *args: _check-auth
     [[ "$skip_patcher" = true ]] && values_args+=(--set plugin.jobs.patchConsoles.enabled=false)
     kube_as_user_args=()
     [[ "$skip_plugin_cr" = true && "$skip_patcher" = true ]] || kube_as_user_args=(--kube-as-user=system:admin)
-    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console-plugin" \
+    helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console" \
         -n "$namespace" --create-namespace \
-        --version "$version" \
+        "${version_args[@]}" \
         "${kube_as_user_args[@]}" \
         "${values_args[@]}"
 
@@ -180,44 +182,52 @@ uninstall *args: _check-auth
 # --- Chart publishing --------------------------------------------------------
 #
 # Packages the console plugin chart and pushes it as an OCI artifact to Quay,
-# so `helm upgrade --install ... oci://quay.io/<org>/aibom-console-plugin`
+# so `helm upgrade --install ... oci://quay.io/<org>/aibom-console`
 # works with no checked-out copy of this repo. One-time setup: `helm registry
 # login quay.io` with an account/robot that has push access under that org,
 # and (in the Quay UI) make the chart repo public, or install accepts
 # credentials some other way.
 #
-# Publishes the chart under two tags per run, mirroring the images' own
-# mutable-latest/immutable-<sha> split:
-#   - <Chart.yaml version> (e.g. 0.1.0) — mutable, overwritten on every
-#     chart-push, since Chart.yaml's version isn't bumped automatically.
-#     `helm upgrade --install ... oci://.../aibom-console-plugin` with no
-#     --version resolves here.
-#   - <Chart.yaml version>-<git sha> (e.g. 0.1.0-abc1234, "-dirty" suffixed if
-#     the working tree has uncommitted changes) — immutable, one per
-#     chart-push, for pinning/rollback.
+# Without --version, publishes the chart as <Chart.yaml version>-<git sha>
+# (e.g. 0.1.0-abc1234, "-dirty" suffixed if the working tree has uncommitted
+# changes): a dev build, immutable, one per run. Its image is :latest
+# (appVersion "latest" in a checkout). The SemVer prerelease hyphen means
+# `helm install` with no --version skips dev builds and takes the newest
+# release; pass --devel or an exact --version to install one.
 #
-# Usage: just chart-push [--repo=<repo>]
+# With --version=X.Y.Z, publishes a release instead: the chart as X.Y.Z with
+# appVersion X.Y.Z, so its image defaults to :X.Y.Z -- the tag
+# .github/workflows/release.yml builds from the same git tag. Refuses a version
+# that's already published: a release is pushed once.
+#
+# Usage: just chart-push [--version=X.Y.Z] [--repo=<repo>]
 [group('charts')]
 chart-push *args:
     #!/usr/bin/env bash
     set -euo pipefail
     repo="{{ default_repo }}"
+    version=""
     for arg in {{ args }}; do
         case "$arg" in
+            --version=*) version="${arg#--version=}" ;;
             --repo=*) repo="${arg#--repo=}" ;;
-            *) echo "error: unknown argument '$arg' (expected --repo=<repo>)" >&2; exit 1 ;;
+            *) echo "error: unknown argument '$arg' (expected --version=X.Y.Z or --repo=<repo>)" >&2; exit 1 ;;
         esac
     done
+    app_version_args=()
+    if [[ -n "$version" ]]; then
+        [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: --version must be X.Y.Z, got '$version'" >&2; exit 1; }
+        if helm show chart "oci://$repo/aibom-console" --version "$version" >/dev/null 2>&1; then
+            echo "error: oci://$repo/aibom-console $version is already published" >&2; exit 1
+        fi
+        app_version_args=(--app-version "$version")
+    else
+        sha="$(git rev-parse --short HEAD)"
+        git diff --quiet HEAD || sha="${sha}-dirty"
+        version="$(grep '^version:' charts/aibom-console/Chart.yaml | awk '{print $2}')-${sha}"
+    fi
     pkg_dir="$(mktemp -d)"
     trap 'rm -rf "$pkg_dir"' EXIT
-    sha="$(git rev-parse --short HEAD)"
-    git diff --quiet HEAD || sha="${sha}-dirty"
-    chart_dir="aibom-console-plugin"
-    chart_name="$(grep '^name:' "charts/$chart_dir/Chart.yaml" | awk '{print $2}')"
-    base_version="$(grep '^version:' "charts/$chart_dir/Chart.yaml" | awk '{print $2}')"
-    pinned_version="${base_version}-${sha}"
-    helm package "charts/$chart_dir" -d "$pkg_dir"
-    helm package "charts/$chart_dir" -d "$pkg_dir" --version "$pinned_version"
-    helm push "$pkg_dir/$chart_name-$base_version.tgz" "oci://$repo"
-    helm push "$pkg_dir/$chart_name-${pinned_version}.tgz" "oci://$repo"
-    echo "pushed oci://$repo/$chart_name — mutable: $base_version, pin with: --version=$pinned_version"
+    helm package charts/aibom-console -d "$pkg_dir" --version "$version" "${app_version_args[@]}"
+    helm push "$pkg_dir/aibom-console-$version.tgz" "oci://$repo"
+    echo "pushed oci://$repo/aibom-console --version=$version"

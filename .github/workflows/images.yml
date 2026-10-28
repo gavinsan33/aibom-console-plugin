@@ -1,8 +1,9 @@
 name: Build image
 
 # Every push to main rebuilds the image as :latest and :<short sha>, which
-# `just deploy` and the chart from chart-publish.yml use. This replaces Quay's
-# GitHub build trigger, whose generated deploy key GitHub rejects as too short.
+# the dev charts from chart-publish.yml use. Release tags (:X.Y.Z) come from
+# release.yml instead. This replaces Quay's GitHub build trigger, whose
+# generated deploy key GitHub rejects as too short.
 on:
   push:
     branches: [main]

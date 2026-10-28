@@ -3,12 +3,13 @@ name: Publish chart to Quay
 # The chart's counterpart to images.yml, which rebuilds the image :latest on
 # every push to main. Restricted to pushes that land on main (i.e. merges, not
 # every commit on a feature branch) and only when chart content actually
-# changed.
+# changed. These are dev builds (<version>-<sha>, image :latest); releases come
+# from release.yml on a vX.Y.Z tag.
 on:
   push:
     branches: [main]
     paths:
-      - "charts/aibom-console-plugin/**"
+      - "charts/aibom-console/**"
 
 jobs:
   chart-push:
@@ -21,7 +22,7 @@ jobs:
       - uses: extractions/setup-just@v2
 
       # Robot account, not a personal Quay login — scope it to push-only access
-      # on the aibom-console-plugin repo, same as any other CI credential.
+      # on the aibom-console chart repo, same as any other CI credential.
       - name: Log in to Quay
         run: |
           helm registry login quay.io \

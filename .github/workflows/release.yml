@@ -1,0 +1,62 @@
+name: Release
+
+# Pushing a tag vX.Y.Z publishes release X.Y.Z: the image tagged X.Y.Z and the
+# chart at version and appVersion X.Y.Z, so the chart's image default points at
+# exactly this build. Nothing is ever republished: the job fails if the image
+# tag or chart version already exists.
+#
+# The Quay robot needs push access to the aibom-console-plugin image repo as
+# well as the aibom-console chart repo.
+on:
+  push:
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: quay.io/project-aibom
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "tag $GITHUB_REF_NAME is not vX.Y.Z" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+
+      - name: Refuse to overwrite an existing image tag
+        run: |
+          if docker buildx imagetools inspect "$REGISTRY/aibom-console-plugin:${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "$REGISTRY/aibom-console-plugin:${{ steps.version.outputs.version }} already exists" >&2; exit 1
+          fi
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/aibom-console-plugin:${{ steps.version.outputs.version }}
+
+      - uses: azure/setup-helm@v4
+
+      - uses: extractions/setup-just@v2
+
+      - name: Log Helm in to Quay
+        run: |
+          helm registry login quay.io \
+            --username "${{ secrets.QUAY_ROBOT_USERNAME }}" \
+            --password "${{ secrets.QUAY_ROBOT_TOKEN }}"
+
+      - name: Publish chart
+        run: just chart-push --version=${{ steps.version.outputs.version }} --repo=$REGISTRY
