@@ -3,3 +3,4 @@ name: aibom-console
 description: Helm chart deploying the AIBOM OpenShift console plugin
 type: application
 version: 0.1.0
+appVersion: "latest"

@@ -94,7 +94,8 @@ deploy-local *args: _check-auth
         version="$(git rev-parse --short HEAD)"
         git diff --quiet HEAD || version="${version}-dirty"
     fi
-    img_ref="${repo}/aibom-console-plugin:${version}"
+    img_repo="${repo}/aibom-console-plugin"
+    img_ref="${img_repo}:${version}"
     "$engine" build -t "$img_ref" .
     "$engine" push "$img_ref"
     values_args=()
@@ -105,7 +106,7 @@ deploy-local *args: _check-auth
     [[ "$skip_plugin_cr" = true && "$skip_patcher" = true ]] || kube_as_user_args=(--kube-as-user=system:admin)
     helm upgrade --install aibom-console-plugin "oci://$repo/aibom-console" \
         -n "$namespace" --create-namespace \
-        --set plugin.image="$img_ref" \
+        --set plugin.image.repository="$img_repo" --set-string plugin.image.tag="$version" \
         "${kube_as_user_args[@]}" \
         "${values_args[@]}"
 

@@ -9,8 +9,14 @@ plugin:
   enabled: true
   name: "aibom-console-plugin"
   description: "AIBOM Console Plugin"
-  image: "quay.io/project-aibom/aibom-console-plugin:latest"
-  imagePullPolicy: Always
+  image:
+    repository: quay.io/project-aibom/aibom-console-plugin
+    # Empty means the chart's appVersion: the release's own tag in a published
+    # chart, "latest" from a checkout.
+    tag: ""
+  # Empty leaves imagePullPolicy unset, so Kubernetes uses IfNotPresent for a
+  # release tag and Always for "latest".
+  imagePullPolicy: ""
   imagePullSecrets: []
   replicas: 2
   port: 9443
