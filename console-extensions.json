@@ -30,7 +30,7 @@
       "name": "%plugin__aibom-console-plugin~AIBOMs%",
       "href": "/aiboms",
       "perspective": "admin",
-      "section": "home"
+      "section": "workloads"
     }
   }
 ]

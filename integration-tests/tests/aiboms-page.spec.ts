@@ -45,7 +45,7 @@ test.describe('AIBOMs page', () => {
 
   test('nav item opens the AIBOMs list page', async ({ page }) => {
     await page.goto('/');
-    await page.locator('[data-quickstart-id="qs-nav-home"]').click();
+    await page.locator('[data-quickstart-id="qs-nav-workloads"]').click();
     await page.getByTestId('nav').getByText('AIBOMs').click();
     await expect(page).toHaveURL(/\/aiboms/);
     await expect(page).toHaveTitle(/AIBOMs/);
