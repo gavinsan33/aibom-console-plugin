@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DescriptionList } from '@patternfly/react-core';
+import { Content, DescriptionList } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { formatFlexNumber, toFlexNumber } from '../../utils/flexible';
 import Field from './Field';
@@ -12,10 +12,31 @@ interface AIBOMModelSectionProps {
 
 const AIBOMModelSection: FC<AIBOMModelSectionProps> = ({ model }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
-  if (!model) return null;
+  const sizeBytes = toFlexNumber(model?.size_bytes);
+  // The webhook always emits `model`, often with every field null when nothing was detected.
+  const hasModel =
+    !!model &&
+    ([
+      model.name,
+      model.version,
+      model.revision,
+      model.base_model,
+      model.architecture,
+      model.framework,
+      model.dtype,
+      model.quantization,
+    ].some(Boolean) ||
+      (sizeBytes ?? 0) > 0 ||
+      !!model.speculative_decoding?.enabled);
+  if (!hasModel) {
+    return (
+      <Section title={t('Model')} md={6}>
+        <Content component="p">{t('No model was detected for this workload.')}</Content>
+      </Section>
+    );
+  }
   const hasBits = toFlexNumber(model.quantization_bits) !== undefined;
   const spec = model.speculative_decoding;
-  const sizeBytes = toFlexNumber(model.size_bytes);
 
   return (
     <Section title={t('Model')} md={6}>
