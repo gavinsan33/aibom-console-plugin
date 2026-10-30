@@ -30,7 +30,7 @@ const formatGpuMemory = (mb: (number | string)[]): string | undefined => {
 const hasEntries = (rec?: Record<string, unknown>): rec is Record<string, unknown> =>
   !!rec && Object.keys(rec).length > 0;
 
-/** Breakdown of the extra discovery data: one titled block per group. No `Stack` wrapper: it's `height: 100%`, and as the card body's second child that overflowed the card by the height of the field list above it. */
+/** Breakdown of the extra discovery data, plus the workload's library versions: one titled block per group. No `Stack` wrapper: it's `height: 100%`, and as the card body's second child that overflowed the card by the height of the field list above it. */
 const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
 
@@ -72,6 +72,14 @@ const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) =>
         ['transparent_hugepages', t('Transparent hugepages')],
         ['max_map_count', t('Max map count')],
       ],
+    },
+    {
+      // Only what the workload's Python process imported; labels are package names.
+      title: t('Libraries'),
+      data: environment.libraries,
+      fields: Object.keys(environment.libraries ?? {})
+        .sort()
+        .map((name) => [name, name]),
     },
   ];
 

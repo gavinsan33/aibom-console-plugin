@@ -11,13 +11,13 @@ interface AIBOMDatasetSectionProps {
 
 const AIBOMDatasetSection: FC<AIBOMDatasetSectionProps> = ({ dataset }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
-  if (!dataset) return null;
-  const declared = dataset.declared;
-  const autoDetected = dataset.auto_detected ?? [];
+  const declared = dataset?.declared;
+  const autoDetected = dataset?.auto_detected ?? [];
 
   return (
     <Section title={t('Dataset')} md={6}>
-      {/* Training workloads always get a `dataset` block, even when nothing was declared or detected. */}
+      {/* Training workloads get an empty `dataset` block when nothing was declared or
+          detected; inference workloads usually get no block at all. Both say so. */}
       {!declared?.name && autoDetected.length === 0 ? (
         <Content component="p">{t('No dataset was detected for this workload.')}</Content>
       ) : (

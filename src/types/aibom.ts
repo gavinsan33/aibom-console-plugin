@@ -86,6 +86,39 @@ export interface AIBOMData {
     epochs?: number | string;
     random_seed?: number | string;
     parallelization_strategy?: string;
+    mixed_precision?: string;
+    // The optimizer the run built (declared_via "runtime_optimizer") or the
+    // settings TrainingArguments/the CLI declared for it. `params` holds what
+    // every param group shares, under torch's names; a setting that differs
+    // between groups is in `param_groups`, with that group's param_tensors.
+    optimizer_config?: {
+      class?: string;
+      params?: Record<string, unknown>;
+      param_groups?: Record<string, unknown>[];
+      optim_args?: string;
+      declared_via?: string;
+    } | null;
+    lr_scheduler?: {
+      type?: string;
+      warmup_ratio?: number;
+      // A fraction of training steps under transformers 5.
+      warmup_steps?: number;
+      declared_via?: string;
+    } | null;
+    determinism?: {
+      // generator ("python"/"numpy"/"torch") -> most recent explicit seed; a
+      // string for a str seed or an int past 2^53.
+      seeds?: Record<string, number | string>;
+      seed_history?: Record<string, (number | string)[]>;
+      data_seed?: number | string;
+      full_determinism?: boolean;
+      cudnn_deterministic?: boolean;
+      cudnn_benchmark?: boolean;
+      deterministic_algorithms?: boolean;
+      deterministic_algorithms_warn_only?: boolean;
+      cublas_workspace_config?: string;
+      python_hash_seed?: string;
+    } | null;
   };
   fine_tuning?: {
     adaptation_method?: string;
@@ -132,6 +165,15 @@ export interface AIBOMData {
     network?: Record<string, unknown>;
     storage?: Record<string, unknown>;
     kernel_config?: Record<string, unknown>;
+    // Reported by the workload's own Python process. cuda_version above is
+    // the driver's newest supported CUDA; torch_cuda_version is the toolkit
+    // torch was built against. `libraries` lists only what was imported.
+    python_version?: string;
+    libraries?: Record<string, string>;
+    torch_cuda_version?: string;
+    torch_hip_version?: string;
+    cudnn_version?: string;
+    nccl_version?: string;
   };
   resource_utilization?: {
     collected_at?: string;
