@@ -18,4 +18,16 @@ describe('empty Model and Dataset sections', () => {
     render(<AIBOMDatasetSection dataset={{ declared: {} }} />);
     expect(screen.getByText('No dataset was detected for this workload.')).toBeVisible();
   });
+
+  it('says so when there is no dataset block at all, as on inference AIBOMs', () => {
+    render(<AIBOMDatasetSection dataset={undefined} />);
+    expect(screen.getByText('Dataset')).toBeVisible();
+    expect(screen.getByText('No dataset was detected for this workload.')).toBeVisible();
+  });
+
+  it('shows the dataset when one was declared', () => {
+    render(<AIBOMDatasetSection dataset={{ declared: { name: 'tatsu-lab/alpaca' } }} />);
+    expect(screen.getByText(/tatsu-lab\/alpaca/)).toBeVisible();
+    expect(screen.queryByText('No dataset was detected for this workload.')).toBeNull();
+  });
 });
