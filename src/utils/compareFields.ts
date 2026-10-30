@@ -18,10 +18,15 @@ import {
   getGpuCount,
   getGpuType,
   getJobName,
+  getLibraries,
+  getLrScheduler,
   getModelName,
   getModelRevision,
   getModelVersion,
+  getOptimizer,
+  getPythonVersion,
   getQuantization,
+  getTorchCudaVersion,
   hasDatasetDrift,
 } from './aibomFields';
 
@@ -51,11 +56,16 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
   { label: 'Git Commit', getValue: getGitCommit },
   { label: 'Git Branch', getValue: getGitBranch },
   { label: 'Dirty', getValue: (a) => String(getDirty(a)) },
+  { label: 'Optimizer', getValue: getOptimizer },
+  { label: 'LR Scheduler', getValue: getLrScheduler },
   { label: 'GPU Type', getValue: getGpuType },
   { label: 'GPU Count', getValue: (a) => String(getGpuCount(a)) },
   { label: 'CUDA Version', getValue: getCudaVersion },
   { label: 'Driver Version', getValue: getDriverVersion },
   { label: 'Framework Version', getValue: getEnvironmentFrameworkVersion },
+  { label: 'Python Version', getValue: getPythonVersion },
+  { label: 'Torch CUDA Version', getValue: getTorchCudaVersion },
+  { label: 'Libraries', getValue: getLibraries },
   { label: 'AIBOM Version', getValue: getAibomVersion },
 ];
 

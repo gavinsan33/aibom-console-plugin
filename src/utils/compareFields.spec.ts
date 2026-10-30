@@ -56,3 +56,28 @@ describe('buildFieldRows', () => {
     expect(modelName?.differs).toBe(true);
   });
 });
+
+describe('buildFieldRows training and software rows', () => {
+  it('compares optimizer, scheduler and library versions like oc-aibom', () => {
+    const run = (scheduler: string, trl: string): AIBOMResource => ({
+      spec: {
+        data: {
+          training: { optimizer: 'adamw_torch', lr_scheduler: { type: scheduler } },
+          environment: {
+            python_version: '3.12.3',
+            torch_cuda_version: '12.8',
+            libraries: { trl, torch: '2.9.0' },
+          },
+        },
+      },
+    });
+    const inference: AIBOMResource = { spec: { data: {} } };
+    const rows = buildFieldRows([run('cosine', '0.24.0'), run('linear', '0.25.0'), inference]);
+    const values = (label: string) => rows.find((r) => r.label === label)?.values;
+    expect(values('Optimizer')).toEqual(['adamw_torch', 'adamw_torch', '']);
+    expect(values('LR Scheduler')).toEqual(['cosine', 'linear', '']);
+    expect(values('Python Version')).toEqual(['3.12.3', '3.12.3', '']);
+    expect(values('Torch CUDA Version')).toEqual(['12.8', '12.8', '']);
+    expect(values('Libraries')).toEqual(['torch 2.9.0, trl 0.24.0', 'torch 2.9.0, trl 0.25.0', '']);
+  });
+});

@@ -36,6 +36,18 @@ export const getDriverVersion = (a: AIBOMResource): string =>
   a.spec?.data?.environment?.driver_version ?? '';
 export const getEnvironmentFrameworkVersion = (a: AIBOMResource): string =>
   a.spec?.data?.environment?.framework_version ?? '';
+export const getPythonVersion = (a: AIBOMResource): string =>
+  a.spec?.data?.environment?.python_version ?? '';
+export const getTorchCudaVersion = (a: AIBOMResource): string =>
+  a.spec?.data?.environment?.torch_cuda_version ?? '';
+/** "name version, ..." sorted by name, the same string `oc-aibom`'s `Environment.LibraryList` builds. */
+export const getLibraries = (a: AIBOMResource): string =>
+  Object.entries(a.spec?.data?.environment?.libraries ?? {})
+    .sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0))
+    .map(([name, version]) => `${name} ${version}`)
+    .join(', ');
+export const getLrScheduler = (a: AIBOMResource): string =>
+  a.spec?.data?.training?.lr_scheduler?.type ?? '';
 export const getGpuCount = (a: AIBOMResource): number =>
   toFlexNumber(a.spec?.data?.environment?.gpu_count) ?? 0;
 export const getAibomVersion = (a: AIBOMResource): string =>
