@@ -13,6 +13,18 @@ describe('AIBOMHardwareDetails', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('lists the workload libraries by name', () => {
+    render(
+      <AIBOMHardwareDetails
+        environment={{ libraries: { torch: '2.14.1+cu130', accelerate: '1.15.0' } }}
+      />,
+    );
+    expect(screen.getByText('Libraries')).toBeVisible();
+    const names = screen.getAllByText(/^(accelerate|torch)$/).map((el) => el.textContent);
+    expect(names).toEqual(['accelerate', 'torch']);
+    expect(screen.getByText('2.14.1+cu130')).toBeVisible();
+  });
+
   it('shows the formatted groups', () => {
     render(<AIBOMHardwareDetails environment={environment} />);
     expect(screen.getByText('2 × 80 GiB')).toBeVisible();

@@ -7,6 +7,20 @@ import Field from './Field';
 import AIBOMHardwareDetails from './AIBOMHardwareDetails';
 import Section from './Section';
 
+/** "CUDA 13.0, cuDNN 9.24.0, NCCL 2.30.7", like `oc-aibom`'s Torch Build line. */
+const formatTorchBuild = (e: NonNullable<AIBOMData['environment']>): string =>
+  (
+    [
+      ['CUDA', e.torch_cuda_version],
+      ['HIP', e.torch_hip_version],
+      ['cuDNN', e.cudnn_version],
+      ['NCCL', e.nccl_version],
+    ] as [string, string | undefined][]
+  )
+    .filter(([, v]) => v)
+    .map(([label, v]) => `${label} ${v ?? ''}`)
+    .join(', ');
+
 interface AIBOMEnvironmentSectionProps {
   environment: AIBOMData['environment'];
 }
@@ -35,6 +49,9 @@ const AIBOMEnvironmentSection: FC<AIBOMEnvironmentSectionProps> = ({ environment
         <Field label={t('Driver version')}>{environment.driver_version}</Field>
         <Field label={t('Framework version')}>{environment.framework_version}</Field>
         <Field label={t('Kernel version')}>{environment.kernel_version}</Field>
+        <Field label={t('Python version')}>{environment.python_version}</Field>
+        {/* CUDA version above is the driver's; this is what torch was built with. */}
+        <Field label={t('Torch build')}>{formatTorchBuild(environment)}</Field>
       </DescriptionList>
       <AIBOMHardwareDetails environment={environment} />
     </Section>
