@@ -1,4 +1,4 @@
-import { formatFlexNumber, toFlexNumber } from './flexible';
+import { formatFlexNumber, formatFlexTuple, toFlexNumber } from './flexible';
 
 describe('toFlexNumber', () => {
   it('accepts a plain number', () => {
@@ -35,5 +35,15 @@ describe('formatFlexNumber', () => {
   it('renders unparseable/missing values as an em dash', () => {
     expect(formatFlexNumber(undefined)).toBe('—');
     expect(formatFlexNumber('not-a-number')).toBe('—');
+  });
+});
+
+describe('formatFlexTuple', () => {
+  it('joins the parts, with a dash for unset ones', () => {
+    expect(formatFlexTuple([0.7, null, '20'])).toBe('0.7 / — / 20');
+  });
+
+  it('is undefined when no part is set, so the row is hidden', () => {
+    expect(formatFlexTuple([null, undefined, null])).toBeUndefined();
   });
 });
