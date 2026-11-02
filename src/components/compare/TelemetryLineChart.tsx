@@ -1,8 +1,10 @@
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Chart,
   ChartAxis,
+  ChartLabel,
   ChartLine,
   ChartVoronoiContainer,
 } from '@patternfly/react-charts/victory';
@@ -15,8 +17,6 @@ import { runChartColor } from '../../utils/runColors';
 interface TelemetryLineChartProps {
   title: string;
   lines: ChartLineModel[];
-  /** One legend entry per compared run (not per expanded series). */
-  legend: { name: string; colorIndex: number }[];
   unit?: string;
   /** `HARDWARE_METRIC_ORDER`/`INFERENCE_METRIC_ORDER` key; picks Mbps/MB/s for throughput to match the tables. */
   metricKey?: string;
@@ -38,30 +38,14 @@ const PADDING = { top: 16, right: 24 };
 const TICK_CHAR_WIDTH = 8;
 const TICK_GUTTER = 20;
 const MIN_LEFT_PADDING = 48;
-/** Room under the plot for the x-axis ticks before the legend starts. */
-const AXIS_ALLOWANCE = 50;
-const LEGEND_ROW_HEIGHT = 28;
-const LEGEND_CHAR_WIDTH = 7.5;
-const LEGEND_ITEM_CHROME = 40;
-
 /**
- * Victory wraps the legend but doesn't grow the chart to fit it, so long run
- * names were clipped at the bottom. Estimate the wrapped row count (greedy
- * packing by approximate text width) so the chart can reserve the space.
+ * Room under the plot for the x-axis ticks. No legend: on Compare the run
+ * labels above the charts are the legend (same colors), and the Detail tab has
+ * one run. Line names are in the tooltips.
  */
-const legendRowCount = (names: string[], availableWidth: number): number => {
-  let rows = 1;
-  let used = 0;
-  names.forEach((name) => {
-    const itemWidth = name.length * LEGEND_CHAR_WIDTH + LEGEND_ITEM_CHROME;
-    if (used > 0 && used + itemWidth > availableWidth) {
-      rows += 1;
-      used = 0;
-    }
-    used += itemWidth;
-  });
-  return rows;
-};
+const BOTTOM_PADDING = 50;
+/** Status-danger token rather than a fixed red, so the limit line follows dark mode. */
+const LIMIT_COLOR = 'var(--pf-t--global--color--status--danger--default)';
 
 /** Tracks the container's width so the (fixed-size) Victory chart fills its card. */
 function useContainerWidth(): [React.RefObject<HTMLDivElement>, number] {
@@ -94,12 +78,12 @@ const tooltipLabel =
 const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
   title,
   lines,
-  legend,
   unit,
   metricKey,
   xMax,
   limit,
 }) => {
+  const { t } = useTranslation('plugin__aibom-console-plugin');
   const [ref, width] = useContainerWidth();
   const maxValue = Math.max(
     limit !== undefined && limit > 0 ? limit : 0,
@@ -112,28 +96,17 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
     MIN_LEFT_PADDING,
     Math.max(...tickLabels.map((label) => label.length)) * TICK_CHAR_WIDTH + TICK_GUTTER,
   );
-  const rows = legendRowCount(
-    legend.map((run) => run.name),
-    width - left - PADDING.right,
-  );
-  const bottom = AXIS_ALLOWANCE + rows * LEGEND_ROW_HEIGHT;
   return (
     <div ref={ref}>
       <Chart
         ariaTitle={title}
         width={width}
-        height={PLOT_HEIGHT + PADDING.top + bottom}
-        padding={{ ...PADDING, left, bottom }}
+        height={PLOT_HEIGHT + PADDING.top + BOTTOM_PADDING}
+        padding={{ ...PADDING, left, bottom: BOTTOM_PADDING }}
         domain={{
           y: [0, ticks[ticks.length - 1]],
           ...(xMax === undefined ? {} : { x: [0, xMax] as [number, number] }),
         }}
-        legendData={legend.map((run) => ({
-          name: run.name,
-          symbol: { fill: runChartColor(run.colorIndex) },
-        }))}
-        legendPosition="bottom"
-        legendAllowWrap
         containerComponent={
           <ChartVoronoiContainer constrainToVisibleArea labels={tooltipLabel(scale)} />
         }
@@ -169,12 +142,19 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
             return (
               <ChartLine
                 data={[
-                  { x: 0, y: limit },
-                  { x: maxX, y: limit },
+                  { x: 0, y: limit, name: t('Limit') },
+                  { x: maxX, y: limit, name: t('Limit') },
                 ]}
+                // Named on the line itself, since there is no legend.
+                labels={({ datum }: { datum: { x: number } }) => (datum.x === 0 ? t('Limit') : '')}
+                // Below the line: the limit is often the top of the axis, and the
+                // chart clips labels drawn above its plot area.
+                labelComponent={
+                  <ChartLabel dx={6} dy={24} textAnchor="start" style={{ fill: LIMIT_COLOR }} />
+                }
                 style={{
                   data: {
-                    stroke: '#C9190B',
+                    stroke: LIMIT_COLOR,
                     strokeWidth: 1.5,
                   },
                 }}
