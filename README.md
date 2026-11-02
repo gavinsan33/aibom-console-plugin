@@ -39,19 +39,8 @@ here.
 
 ## Development
 
-```sh
-yarn install
-yarn start            # dev server on :9001
-```
-
-In a second terminal:
-
-```sh
-oc login
-yarn start-console    # runs OpenShift console in a container, connected to your cluster
-```
-
-Navigate to <http://localhost:9000/aiboms>.
+See [docs/guide/development.md](docs/guide/development.md) for running the
+plugin against a local console.
 
 ## Testing
 
