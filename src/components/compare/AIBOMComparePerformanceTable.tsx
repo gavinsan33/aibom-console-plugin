@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@patternfly/react-core';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { InnerScrollContainer, Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
 import { buildPerformanceRows } from '../../utils/comparePerformance';
 import type { MetricSet, PerformanceCell } from '../../utils/comparePerformance';
@@ -34,60 +34,69 @@ const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
   const showDelta = items.length === 2;
 
   return (
-    <Table aria-label={t('Performance comparison')} variant="compact">
-      <Thead>
-        <Tr>
-          <Th>{t('Metric')}</Th>
-          {runNames.map((name, index) => (
-            <Th key={index}>
-              <Label color={runColor(index)}>{name}</Label>
+    // Run headers don't wrap, so their labels (and the suffix telling re-runs of
+    // one job apart) are never cut off; with many runs the table scrolls sideways
+    // with the Metric column pinned.
+    <InnerScrollContainer>
+      <Table aria-label={t('Performance comparison')} variant="compact">
+        <Thead>
+          <Tr>
+            <Th isStickyColumn hasRightBorder>
+              {t('Metric')}
             </Th>
-          ))}
-          {showDelta && (
-            <>
-              <Th>{t('Delta')}</Th>
-              <Th>{t('Change')}</Th>
-            </>
-          )}
-        </Tr>
-      </Thead>
-      <Tbody>
-        {rows.map((row) => (
-          <Tr key={row.metricKey}>
-            <Td dataLabel={t('Metric')}>{row.label}</Td>
-            {row.values.map((cell, index) => (
-              <Td key={index} dataLabel={runNames[index]}>
-                {formatCell(cell)}
-              </Td>
+            {runNames.map((name, index) => (
+              <Th key={index} modifier="nowrap">
+                <Label color={runColor(index)}>{name}</Label>
+              </Th>
             ))}
             {showDelta && (
               <>
-                <Td dataLabel={t('Delta')}>
-                  {row.delta === undefined ? (
-                    '—'
-                  ) : (
-                    <Label color={signColor(row.delta)} isCompact>
-                      {row.delta > 0 ? `+${row.delta.toFixed(2)}` : row.delta.toFixed(2)}
-                    </Label>
-                  )}
-                </Td>
-                <Td dataLabel={t('Change')}>
-                  {row.pctChange === undefined ? (
-                    t('N/A')
-                  ) : (
-                    <Label color={signColor(row.pctChange)} isCompact>
-                      {row.pctChange > 0
-                        ? `+${row.pctChange.toFixed(1)}%`
-                        : `${row.pctChange.toFixed(1)}%`}
-                    </Label>
-                  )}
-                </Td>
+                <Th>{t('Delta')}</Th>
+                <Th>{t('Change')}</Th>
               </>
             )}
           </Tr>
-        ))}
-      </Tbody>
-    </Table>
+        </Thead>
+        <Tbody>
+          {rows.map((row) => (
+            <Tr key={row.metricKey}>
+              <Td dataLabel={t('Metric')} isStickyColumn hasRightBorder>
+                {row.label}
+              </Td>
+              {row.values.map((cell, index) => (
+                <Td key={index} dataLabel={runNames[index]}>
+                  {formatCell(cell)}
+                </Td>
+              ))}
+              {showDelta && (
+                <>
+                  <Td dataLabel={t('Delta')}>
+                    {row.delta === undefined ? (
+                      '—'
+                    ) : (
+                      <Label color={signColor(row.delta)} isCompact>
+                        {row.delta > 0 ? `+${row.delta.toFixed(2)}` : row.delta.toFixed(2)}
+                      </Label>
+                    )}
+                  </Td>
+                  <Td dataLabel={t('Change')}>
+                    {row.pctChange === undefined ? (
+                      t('N/A')
+                    ) : (
+                      <Label color={signColor(row.pctChange)} isCompact>
+                        {row.pctChange > 0
+                          ? `+${row.pctChange.toFixed(1)}%`
+                          : `${row.pctChange.toFixed(1)}%`}
+                      </Label>
+                    )}
+                  </Td>
+                </>
+              )}
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </InnerScrollContainer>
   );
 };
 

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flex, FlexItem, Label } from '@patternfly/react-core';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { InnerScrollContainer, Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
 import { buildFieldRows } from '../../utils/compareFields';
 import { runColor } from '../../utils/runColors';
@@ -16,48 +16,55 @@ const AIBOMCompareFieldsTable: FC<AIBOMCompareFieldsTableProps> = ({ items, runN
   const rows = buildFieldRows(items);
 
   return (
-    <Table aria-label={t('Field comparison')} variant="compact">
-      <Thead>
-        <Tr>
-          <Th>{t('Field')}</Th>
-          {runNames.map((name, index) => (
-            <Th key={index}>
-              <Label color={runColor(index)}>{name}</Label>
+    // Run headers don't wrap, so their labels (and the suffix telling re-runs of
+    // one job apart) are never cut off; with many runs the table scrolls sideways
+    // with the Field column pinned.
+    <InnerScrollContainer>
+      <Table aria-label={t('Field comparison')} variant="compact">
+        <Thead>
+          <Tr>
+            <Th isStickyColumn hasRightBorder>
+              {t('Field')}
             </Th>
-          ))}
-        </Tr>
-      </Thead>
-      <Tbody>
-        {rows.map((row) => (
-          <Tr key={row.label}>
-            <Td dataLabel={t('Field')}>
-              {row.differs ? (
-                <Flex
-                  spaceItems={{ default: 'spaceItemsSm' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                >
-                  <FlexItem>
-                    <strong>{row.label}</strong>
-                  </FlexItem>
-                  <FlexItem>
-                    <Label color="orange" isCompact>
-                      {t('differs')}
-                    </Label>
-                  </FlexItem>
-                </Flex>
-              ) : (
-                row.label
-              )}
-            </Td>
-            {row.values.map((value, index) => (
-              <Td key={index} dataLabel={runNames[index]}>
-                {value || '—'}
-              </Td>
+            {runNames.map((name, index) => (
+              <Th key={index} modifier="nowrap">
+                <Label color={runColor(index)}>{name}</Label>
+              </Th>
             ))}
           </Tr>
-        ))}
-      </Tbody>
-    </Table>
+        </Thead>
+        <Tbody>
+          {rows.map((row) => (
+            <Tr key={row.label}>
+              <Td dataLabel={t('Field')} isStickyColumn hasRightBorder>
+                {row.differs ? (
+                  <Flex
+                    spaceItems={{ default: 'spaceItemsSm' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                  >
+                    <FlexItem>
+                      <strong>{row.label}</strong>
+                    </FlexItem>
+                    <FlexItem>
+                      <Label color="orange" isCompact>
+                        {t('differs')}
+                      </Label>
+                    </FlexItem>
+                  </Flex>
+                ) : (
+                  row.label
+                )}
+              </Td>
+              {row.values.map((value, index) => (
+                <Td key={index} dataLabel={runNames[index]}>
+                  {value || '—'}
+                </Td>
+              ))}
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </InnerScrollContainer>
   );
 };
 
