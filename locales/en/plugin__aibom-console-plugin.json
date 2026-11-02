@@ -166,6 +166,7 @@
   "Served model name": "Served model name",
   "Serving engine": "Serving engine",
   "Show individual pods and GPUs": "Show individual pods and GPUs",
+  "Show limits": "Show limits",
   "Show system details": "Show system details",
   "Signature": "Signature",
   "Signature valid, key not confirmed": "Signature valid, key not confirmed",

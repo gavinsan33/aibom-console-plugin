@@ -66,6 +66,7 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const [expanded, setExpanded] = useState(false);
   const [fitToData, setFitToData] = useState(false);
+  const [showLimits, setShowLimits] = useState(true);
 
   const { hardware, inference } = useMemo(
     () => ({
@@ -91,7 +92,7 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
                   metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
-                  limit={limits?.[spec.metricKey]}
+                  limit={showLimits ? limits?.[spec.metricKey] : undefined}
                   runs={[
                     {
                       name,
@@ -134,6 +135,20 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
                 onChange={setFitToData}
               />
             </FlexItem>
+            {/* Hiding the limits drops them from the y range too, so each chart
+                rescales to its own data instead of staying sized to a far-off limit. */}
+            {hardware.some((spec) => (limits?.[spec.metricKey] ?? 0) > 0) && (
+              <FlexItem>
+                <Switch
+                  id="aibom-detail-telemetry-limits"
+                  label={t('Show limits')}
+                  isChecked={showLimits}
+                  onChange={(_event, checked) => {
+                    setShowLimits(checked);
+                  }}
+                />
+              </FlexItem>
+            )}
           </Flex>
         </Stack>
       </GridItem>
