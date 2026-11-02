@@ -41,7 +41,7 @@ const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
       <Table aria-label={t('Performance comparison')} variant="compact">
         <Thead>
           <Tr>
-            <Th isStickyColumn hasRightBorder>
+            <Th isStickyColumn stickyMinWidth="10rem" hasRightBorder>
               {t('Metric')}
             </Th>
             {runNames.map((name, index) => (
@@ -60,7 +60,7 @@ const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
         <Tbody>
           {rows.map((row) => (
             <Tr key={row.metricKey}>
-              <Td dataLabel={t('Metric')} isStickyColumn hasRightBorder>
+              <Td dataLabel={t('Metric')} isStickyColumn stickyMinWidth="10rem" hasRightBorder>
                 {row.label}
               </Td>
               {row.values.map((cell, index) => (
