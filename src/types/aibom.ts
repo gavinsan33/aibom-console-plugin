@@ -87,6 +87,29 @@ export interface AIBOMData {
     random_seed?: number | string;
     parallelization_strategy?: string;
     mixed_precision?: string;
+    // How mixed_precision was found: "accelerator", "deepspeed", "fsdp",
+    // "training_arguments", "fp8_hook", "autocast", "accelerate_env", "cli_arg".
+    mixed_precision_declared_via?: string;
+    // Numerical precision the runtime hooks saw. A TF32 flag that's absent
+    // wasn't captured, which isn't the same as false.
+    precision?: {
+      tf32_matmul?: boolean;
+      tf32_cudnn?: boolean;
+      float32_matmul_precision?: string;
+      // Each distinct enabled torch.autocast, as "device:dtype".
+      autocast?: string[];
+      // backend is null when accelerate reported fp8 without naming one.
+      fp8?: { backend?: string | null; recipe?: string } | null;
+      // buffer_dtype is FSDP1's MixedPrecision, output_dtype FSDP2's MixedPrecisionPolicy.
+      fsdp_mixed_precision?: {
+        policy?: string;
+        param_dtype?: string;
+        reduce_dtype?: string;
+        buffer_dtype?: string;
+        output_dtype?: string;
+      } | null;
+      deepspeed?: string;
+    } | null;
     // The optimizer the run built (declared_via "runtime_optimizer") or the
     // settings TrainingArguments/the CLI declared for it. `params` holds what
     // every param group shares, under torch's names; a setting that differs

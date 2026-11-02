@@ -5,12 +5,15 @@ import type { AIBOMData } from '../../types/aibom';
 import { formatFlexNumber } from '../../utils/flexible';
 import {
   formatDeterminismFlags,
+  formatFp8,
+  formatFsdpPrecision,
   formatLrScheduler,
   formatParamGroups,
   formatSeedHistory,
   formatSeeds,
   formatSettings,
   formatSettingValue,
+  formatTf32,
   withVia,
 } from '../../utils/trainingFields';
 import Field from './Field';
@@ -26,6 +29,7 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
   const optimizer = training.optimizer_config;
   const scheduler = training.lr_scheduler;
   const determinism = training.determinism;
+  const precision = training.precision;
   const paramGroups = formatParamGroups(optimizer?.param_groups);
   const params = formatSettings(optimizer?.params);
 
@@ -38,7 +42,17 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
         <Field label={t('Epochs')}>{formatFlexNumber(training.epochs)}</Field>
         <Field label={t('Random seed')}>{formatFlexNumber(training.random_seed)}</Field>
         <Field label={t('Parallelization')}>{training.parallelization_strategy}</Field>
-        <Field label={t('Mixed precision')}>{training.mixed_precision}</Field>
+        <Field label={t('Mixed precision')}>
+          {training.mixed_precision &&
+            withVia(training.mixed_precision, training.mixed_precision_declared_via)}
+        </Field>
+        <Field label="TF32">{precision && formatTf32(precision)}</Field>
+        <Field label={t('Autocast')}>{precision?.autocast?.join(', ')}</Field>
+        <Field label="FP8">{precision?.fp8 && formatFp8(precision.fp8)}</Field>
+        <Field label={t('FSDP precision')}>
+          {precision?.fsdp_mixed_precision && formatFsdpPrecision(precision.fsdp_mixed_precision)}
+        </Field>
+        <Field label={t('DeepSpeed precision')}>{precision?.deepspeed}</Field>
         <Field label={t('Optimizer class')}>
           {optimizer?.class && withVia(optimizer.class, optimizer.declared_via)}
         </Field>

@@ -71,3 +71,37 @@ export const formatLrScheduler = (s: NonNullable<Training['lr_scheduler']>): str
 
 export const withVia = (value: string, via?: string): string =>
   value && via ? `${value} (via: ${via})` : value;
+
+type Precision = NonNullable<Training['precision']>;
+
+/** `"matmul true, cudnn true, float32 matmul precision high"`, as `oc aibom describe` prints it. */
+export const formatTf32 = (p: Precision): string =>
+  [
+    p.tf32_matmul != null ? `matmul ${String(p.tf32_matmul)}` : undefined,
+    p.tf32_cudnn != null ? `cudnn ${String(p.tf32_cudnn)}` : undefined,
+    p.float32_matmul_precision
+      ? `float32 matmul precision ${p.float32_matmul_precision}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+export const formatFp8 = (fp8: NonNullable<Precision['fp8']>): string =>
+  `${fp8.backend ?? 'unknown backend'}${fp8.recipe ? ` (recipe ${fp8.recipe})` : ''}`;
+
+/** `"MixedPrecision: param bfloat16, reduce float32, buffer bfloat16"`. */
+export const formatFsdpPrecision = (f: NonNullable<Precision['fsdp_mixed_precision']>): string => {
+  const dtypes = (
+    [
+      ['param', f.param_dtype],
+      ['reduce', f.reduce_dtype],
+      ['buffer', f.buffer_dtype],
+      ['output', f.output_dtype],
+    ] as const
+  )
+    .filter(([, d]) => d)
+    .map(([label, d]) => `${label} ${String(d)}`)
+    .join(', ');
+  if (f.policy && dtypes) return `${f.policy}: ${dtypes}`;
+  return f.policy ?? dtypes;
+};
