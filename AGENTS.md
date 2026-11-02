@@ -77,7 +77,10 @@ in different charts. The "Fit each chart to its data" switch (off by default) op
 into per-chart auto-fit to zoom into a late-starting series, with a note that the charts
 then no longer line up. Each run is one
 aggregate line by default; the "Show individual pods and GPUs" switch expands to
-per-series lines (same color, dashed variants). Both tabs are gated by the same
+per-series lines (same color, dashed variants). Hardware limits draw as a labeled
+line; the "Show limits" switch (on by default, shown only when some chart has a
+limit) hides them and drops them from the y range, so each chart rescales to its
+data instead of staying sized to a far-off limit. Both tabs are gated by the same
 feature flag (below).
 
 Data: `spec.data.telemetry_series_ref` points at a separate `aibom.io/v1alpha1`

@@ -104,6 +104,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const [expanded, setExpanded] = useState(false);
   const [fitToData, setFitToData] = useState(false);
+  const [showLimits, setShowLimits] = useState(true);
   const { loading, byItem, mismatched } = useStoredTelemetry(items);
 
   const { hardware, inference } = useMemo(
@@ -159,7 +160,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
                   metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
-                  limit={spec.limit}
+                  limit={showLimits ? spec.limit : undefined}
                 />
               </CardBody>
             </Card>
@@ -221,6 +222,20 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
                 onChange={setFitToData}
               />
             </FlexItem>
+            {/* Hiding the limits drops them from the y range too, so each chart
+                rescales to its own data instead of staying sized to a far-off limit. */}
+            {hardware.some((spec) => (spec.limit ?? 0) > 0) && (
+              <FlexItem>
+                <Switch
+                  id="aibom-compare-telemetry-limits"
+                  label={t('Show limits')}
+                  isChecked={showLimits}
+                  onChange={(_event, checked) => {
+                    setShowLimits(checked);
+                  }}
+                />
+              </FlexItem>
+            )}
           </Flex>
         </Stack>
       </GridItem>
