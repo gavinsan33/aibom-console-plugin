@@ -21,6 +21,7 @@ import type { AIBOMResource } from '../types/aibom';
 import { getJobName, hasNoInferenceMetrics } from '../utils/aibomFields';
 import { INFERENCE } from '../utils/comparePerformance';
 import { getPluginFeatureFlags } from '../utils/pluginFeatureFlags';
+import { runLabels } from '../utils/runColors';
 import AIBOMCompareFieldsTable from './compare/AIBOMCompareFieldsTable';
 import AIBOMCompareTelemetryTab from './compare/AIBOMCompareTelemetryTab';
 import AIBOMComparePerformanceTable from './compare/AIBOMComparePerformanceTable';
@@ -90,11 +91,12 @@ const AIBOMComparePage: FC = () => {
   const items = itemKeys
     .map(({ key }) => results[key].data)
     .filter((data): data is AIBOMResource => data != null);
-  const runNames = itemKeys.map(({ key, name }) => {
-    const data = results[key].data;
-    const jobName = data === null ? '' : getJobName(data);
-    return jobName || name;
-  });
+  const runNames = runLabels(
+    itemKeys.map(({ key, name }) => {
+      const data = results[key].data;
+      return { jobName: data === null ? '' : getJobName(data), name };
+    }),
+  );
 
   return (
     <>

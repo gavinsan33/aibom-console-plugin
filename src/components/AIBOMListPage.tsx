@@ -173,6 +173,7 @@ const AIBOMListPage: FC = () => {
                 onSort={setSort}
                 selected={selected}
                 onToggleSelect={onToggleSelect}
+                showNamespace={isAllNamespacesKey(activeNamespace)}
               />
             )}
           </>

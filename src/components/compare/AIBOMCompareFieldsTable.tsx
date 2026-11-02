@@ -21,7 +21,7 @@ const AIBOMCompareFieldsTable: FC<AIBOMCompareFieldsTableProps> = ({ items, runN
         <Tr>
           <Th>{t('Field')}</Th>
           {runNames.map((name, index) => (
-            <Th key={name}>
+            <Th key={index}>
               <Label color={runColor(index)}>{name}</Label>
             </Th>
           ))}
