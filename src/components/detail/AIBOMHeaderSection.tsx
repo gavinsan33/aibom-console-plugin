@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DescriptionList, Label, Spinner } from '@patternfly/react-core';
 import type { AIBOMResource } from '../../types/aibom';
 import { earliestPodStart, formatDuration } from '../../utils/executionMetadata';
+import { formatTimeRange } from '../../utils/formatTimestamp';
 import { podStatusColor } from '../../utils/podStatus';
 import { verifyLabelColor } from './verifyLabel';
 import Field from './Field';
@@ -48,7 +49,7 @@ const AIBOMHeaderSection: FC<AIBOMHeaderSectionProps> = ({ item }) => {
           {data.experiment_intent_declared_via && ` (via: ${data.experiment_intent_declared_via})`}
         </Field>
         <Field label={t('Runtime')}>
-          {duration && start && `${duration} (${start} -> ${spec.collectedAt ?? '?'})`}
+          {duration && start && `${duration} (${formatTimeRange(start, spec.collectedAt)})`}
         </Field>
         <Field label={t('Status')}>
           {status && <Label color={podStatusColor(status)}>{status}</Label>}
