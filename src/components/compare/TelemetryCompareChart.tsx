@@ -68,7 +68,6 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
     <TelemetryLineChart
       title={title}
       lines={lines}
-      legend={runs.map(({ name, colorIndex }) => ({ name, colorIndex }))}
       unit={unit}
       metricKey={metricKey}
       xMax={xMax}

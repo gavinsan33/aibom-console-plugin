@@ -8,10 +8,14 @@ import {
   CardBody,
   CardTitle,
   Content,
+  Flex,
+  FlexItem,
   Grid,
   GridItem,
   Label,
+  LabelGroup,
   Spinner,
+  Stack,
   Switch,
 } from '@patternfly/react-core';
 import type { AIBOMResource } from '../../types/aibom';
@@ -167,47 +171,58 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
   return (
     <Grid hasGutter>
       <GridItem span={12}>
-        <Content component="p">
-          {t(
-            'Time axes show elapsed time since each run started, so runs from different times line up.',
-          )}
-        </Content>
-        {mismatched.length > 0 && (
-          <Alert
-            variant="warning"
-            isInline
-            title={t(
-              "Stored telemetry doesn't match the AIBOM's recorded digest for: {{runs}}. It was not charted.",
-              { runs: mismatched.map(nameOf).join(', ') },
-            )}
-          />
-        )}
-        {withoutStored.length > 0 && (
+        <Stack hasGutter>
           <Content component="p">
             {t(
-              'No usable stored telemetry for: {{runs}}. These runs are left out of the charts (AIBOMs created before telemetry was stored have none).',
-              { runs: withoutStored.join(', ') },
+              'Time axes show elapsed time since each run started, so runs from different times line up.',
             )}
           </Content>
-        )}
-        {runNames.map((name, index) => (
-          <Label key={`${name}-${String(index)}`} color={runColor(index)} isCompact>
-            {name}
-          </Label>
-        ))}
-        <Switch
-          id="aibom-compare-telemetry-expanded"
-          label={t('Show individual pods and GPUs')}
-          isChecked={expanded}
-          onChange={(_event, checked) => {
-            setExpanded(checked);
-          }}
-        />
-        <FitToDataSwitch
-          id="aibom-compare-telemetry-fit"
-          isChecked={fitToData}
-          onChange={setFitToData}
-        />
+          {mismatched.length > 0 && (
+            <Alert
+              variant="warning"
+              isInline
+              title={t(
+                "Stored telemetry doesn't match the AIBOM's recorded digest for: {{runs}}. It was not charted.",
+                { runs: mismatched.map(nameOf).join(', ') },
+              )}
+            />
+          )}
+          {withoutStored.length > 0 && (
+            <Content component="p">
+              {t(
+                'No usable stored telemetry for: {{runs}}. These runs are left out of the charts (AIBOMs created before telemetry was stored have none).',
+                { runs: withoutStored.join(', ') },
+              )}
+            </Content>
+          )}
+          {/* The charts' legend: each line is drawn in its run's label color. */}
+          <LabelGroup numLabels={runNames.length} aria-label={t('Compared runs')}>
+            {runNames.map((name, index) => (
+              <Label key={`${name}-${String(index)}`} color={runColor(index)}>
+                {name}
+              </Label>
+            ))}
+          </LabelGroup>
+          <Flex spaceItems={{ default: 'spaceItemsXl' }}>
+            <FlexItem>
+              <Switch
+                id="aibom-compare-telemetry-expanded"
+                label={t('Show individual pods and GPUs')}
+                isChecked={expanded}
+                onChange={(_event, checked) => {
+                  setExpanded(checked);
+                }}
+              />
+            </FlexItem>
+            <FlexItem>
+              <FitToDataSwitch
+                id="aibom-compare-telemetry-fit"
+                isChecked={fitToData}
+                onChange={setFitToData}
+              />
+            </FlexItem>
+          </Flex>
+        </Stack>
       </GridItem>
       <Section title={t('Hardware Telemetry')}>
         {renderCharts(hardware, t('No hardware telemetry is stored for the compared runs.'))}

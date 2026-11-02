@@ -34,6 +34,7 @@
   "Commit": "Commit",
   "Compare": "Compare",
   "Compare AIBOMs": "Compare AIBOMs",
+  "Compared runs": "Compared runs",
   "Cores per socket": "Cores per socket",
   "Could not build the telemetry CSV: {{error}}": "Could not build the telemetry CSV: {{error}}",
   "CPU": "CPU",

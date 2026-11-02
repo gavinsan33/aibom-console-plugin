@@ -1,7 +1,18 @@
 import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, CardBody, CardTitle, Content, Grid, GridItem, Switch } from '@patternfly/react-core';
+import {
+  Card,
+  CardBody,
+  CardTitle,
+  Content,
+  Flex,
+  FlexItem,
+  Grid,
+  GridItem,
+  Stack,
+  Switch,
+} from '@patternfly/react-core';
 import {
   HARDWARE_METRIC_LABELS,
   HARDWARE_METRIC_ORDER,
@@ -103,20 +114,28 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
   return (
     <Grid hasGutter>
       <GridItem span={12}>
-        <Content component="p">{t('Time axes show elapsed time since the run started.')}</Content>
-        <Switch
-          id="aibom-detail-telemetry-expanded"
-          label={t('Show individual pods and GPUs')}
-          isChecked={expanded}
-          onChange={(_event, checked) => {
-            setExpanded(checked);
-          }}
-        />
-        <FitToDataSwitch
-          id="aibom-detail-telemetry-fit"
-          isChecked={fitToData}
-          onChange={setFitToData}
-        />
+        <Stack hasGutter>
+          <Content component="p">{t('Time axes show elapsed time since the run started.')}</Content>
+          <Flex spaceItems={{ default: 'spaceItemsXl' }}>
+            <FlexItem>
+              <Switch
+                id="aibom-detail-telemetry-expanded"
+                label={t('Show individual pods and GPUs')}
+                isChecked={expanded}
+                onChange={(_event, checked) => {
+                  setExpanded(checked);
+                }}
+              />
+            </FlexItem>
+            <FlexItem>
+              <FitToDataSwitch
+                id="aibom-detail-telemetry-fit"
+                isChecked={fitToData}
+                onChange={setFitToData}
+              />
+            </FlexItem>
+          </Flex>
+        </Stack>
       </GridItem>
       <Section title={t('Hardware Telemetry')}>
         {missingGpu && (

@@ -63,7 +63,7 @@ describe('AIBOMCompareTelemetryTab', () => {
     Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true });
   });
 
-  it('charts stored series, including GPU metrics, with one legend entry per run', async () => {
+  it('charts stored series, including GPU metrics, with the run labels as the only legend', async () => {
     mockSeriesObjects();
     render(
       <AIBOMCompareTelemetryTab
@@ -72,7 +72,7 @@ describe('AIBOMCompareTelemetryTab', () => {
       />,
     );
     expect((await screen.findAllByText('GPU Utilization')).length).toBeGreaterThan(0);
-    expect((await screen.findAllByText('run-a')).length).toBeGreaterThan(1); // label + legend
+    expect(await screen.findAllByText('run-a')).toHaveLength(1); // the run label, no per-chart legend
     expect(screen.queryByText(/No usable stored telemetry/)).not.toBeInTheDocument();
     const watched = (useK8sWatchResources as jest.Mock).mock.calls.flatMap(
       ([resources]: [Record<string, unknown>]) => Object.values(resources),
