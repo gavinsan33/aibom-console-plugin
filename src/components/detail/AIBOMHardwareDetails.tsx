@@ -1,6 +1,7 @@
 import type { FC } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DescriptionList, Grid, GridItem, Title } from '@patternfly/react-core';
+import { DescriptionList, ExpandableSection, Grid, GridItem, Title } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { toFlexNumber } from '../../utils/flexible';
 import Field from './Field';
@@ -18,8 +19,11 @@ const formatValue = (value: unknown): string =>
     .split(/\s*\n\s*/)
     .join(', ');
 
+/** Label column width shared with the Environment card's main list, so the two line up. */
+export const ENVIRONMENT_TERM_WIDTH = '22ch';
+
 /** "2 × 80 GiB" when every GPU matches, else each size in turn. */
-const formatGpuMemory = (mb: (number | string)[]): string | undefined => {
+export const formatGpuMemory = (mb: (number | string)[]): string | undefined => {
   const gib = mb
     .map((m) => toFlexNumber(m))
     .map((m) => (m === undefined ? '?' : `${String(Math.round(m / 1024))} GiB`));
@@ -30,18 +34,14 @@ const formatGpuMemory = (mb: (number | string)[]): string | undefined => {
 const hasEntries = (rec?: Record<string, unknown>): rec is Record<string, unknown> =>
   !!rec && Object.keys(rec).length > 0;
 
-/** Breakdown of the extra discovery data, plus the workload's library versions: one titled block per group. No `Stack` wrapper: it's `height: 100%`, and as the card body's second child that overflowed the card by the height of the field list above it. */
+/** Breakdown of the extra discovery data, plus the workload's library versions: one titled block per group, collapsed by default -- the libraries alone are dozens of rows, and the card's main list already covers the GPU/CPU/memory summary. */
 const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
+  const [expanded, setExpanded] = useState(false);
 
   const groups: { title: string; data?: Record<string, unknown>; fields: [string, string][] }[] = [
     {
-      title: t('GPU'),
-      data: environment.gpu_memory_mb && { gpu_memory: formatGpuMemory(environment.gpu_memory_mb) },
-      fields: [['gpu_memory', t('GPU memory')]],
-    },
-    {
-      title: t('CPU'),
+      title: t('CPU topology'),
       data: environment.cpu,
       fields: [
         ['cpu_architecture', t('Architecture')],
@@ -87,22 +87,34 @@ const AIBOMHardwareDetails: FC<AIBOMHardwareDetailsProps> = ({ environment }) =>
   if (visibleGroups.length === 0) return null;
 
   return (
-    <Grid hasGutter>
-      {visibleGroups.map((g) => (
-        <GridItem key={g.title} md={6}>
-          <Title headingLevel="h4" size="md">
-            {g.title}
-          </Title>
-          <DescriptionList isHorizontal isCompact horizontalTermWidthModifier={{ default: '22ch' }}>
-            {g.fields.map(([key, label]) => (
-              <Field key={key} label={label}>
-                {g.data?.[key] === undefined ? undefined : formatValue(g.data[key])}
-              </Field>
-            ))}
-          </DescriptionList>
-        </GridItem>
-      ))}
-    </Grid>
+    <ExpandableSection
+      toggleText={expanded ? t('Hide system details') : t('Show system details')}
+      isExpanded={expanded}
+      onToggle={(_event, isExpanded) => {
+        setExpanded(isExpanded);
+      }}
+    >
+      <Grid hasGutter>
+        {visibleGroups.map((g) => (
+          <GridItem key={g.title} md={6}>
+            <Title headingLevel="h4" size="md">
+              {g.title}
+            </Title>
+            <DescriptionList
+              isHorizontal
+              isCompact
+              horizontalTermWidthModifier={{ default: ENVIRONMENT_TERM_WIDTH }}
+            >
+              {g.fields.map(([key, label]) => (
+                <Field key={key} label={label}>
+                  {g.data?.[key] === undefined ? undefined : formatValue(g.data[key])}
+                </Field>
+              ))}
+            </DescriptionList>
+          </GridItem>
+        ))}
+      </Grid>
+    </ExpandableSection>
   );
 };
 

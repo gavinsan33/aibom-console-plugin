@@ -15,7 +15,7 @@ const AIBOMSourceSection: FC<AIBOMSourceSectionProps> = ({ sourceCode }) => {
   const hasSource = !!sourceCode?.git_repository || !!sourceCode?.git_commit;
 
   return (
-    <Section title={t('Source')}>
+    <Section title={t('Source')} md={6}>
       {!hasSource ? (
         <Content component="p">{t('No Git source was detected for this workload.')}</Content>
       ) : (
