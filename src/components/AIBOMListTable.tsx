@@ -80,10 +80,12 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
           <Th>{t('Job')}</Th>
           {showNamespace && <Th>{t('Namespace')}</Th>}
           <Th>{t('Model')}</Th>
-          <Th>{t('Experiment intent')}</Th>
-          <Th>{t('Quantization')}</Th>
+          <Th modifier="nowrap">{t('Intent')}</Th>
+          <Th modifier="nowrap">{t('Quantization')}</Th>
           <Th>{t('GPU type')}</Th>
-          <Th {...sortParams('age', collectedAtIndex)}>{t('Collected at')}</Th>
+          <Th {...sortParams('age', collectedAtIndex)} modifier="nowrap">
+            {t('Collected at')}
+          </Th>
           {metricKey && <Th {...sortParams(sortKey, collectedAtIndex + 1)}>{sortKey}</Th>}
         </Tr>
       </Thead>
@@ -111,10 +113,16 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
             </Td>
             {showNamespace && <Td dataLabel={t('Namespace')}>{item.metadata?.namespace ?? '—'}</Td>}
             <Td dataLabel={t('Model')}>{getModelName(item) || '—'}</Td>
-            <Td dataLabel={t('Experiment intent')}>{getExperimentIntent(item) || '—'}</Td>
-            <Td dataLabel={t('Quantization')}>{getQuantization(item) || '—'}</Td>
+            <Td dataLabel={t('Intent')} modifier="nowrap">
+              {getExperimentIntent(item) || '—'}
+            </Td>
+            <Td dataLabel={t('Quantization')} modifier="nowrap">
+              {getQuantization(item) || '—'}
+            </Td>
             <Td dataLabel={t('GPU type')}>{getGpuType(item) || '—'}</Td>
-            <Td dataLabel={t('Collected at')}>{formatTimestamp(getCollectedAt(item))}</Td>
+            <Td dataLabel={t('Collected at')} modifier="nowrap">
+              {formatTimestamp(getCollectedAt(item))}
+            </Td>
             {metricKey && (
               <Td dataLabel={sortKey}>
                 {hasMetric(item, metricKey)
