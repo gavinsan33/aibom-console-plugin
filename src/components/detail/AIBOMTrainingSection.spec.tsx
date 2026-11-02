@@ -62,10 +62,57 @@ describe('AIBOMTrainingSection', () => {
     expect(screen.queryByText('Optimizer class')).toBeNull();
   });
 
+  it('shows numerical precision and how mixed precision was found', () => {
+    render(
+      <AIBOMTrainingSection
+        training={{
+          mixed_precision: 'bf16',
+          mixed_precision_declared_via: 'accelerator',
+          precision: {
+            tf32_matmul: true,
+            tf32_cudnn: false,
+            float32_matmul_precision: 'high',
+            autocast: ['cuda:bfloat16', 'cpu:bfloat16'],
+            fp8: { backend: 'transformer_engine', recipe: 'DelayedScaling' },
+            fsdp_mixed_precision: {
+              policy: 'MixedPrecision',
+              param_dtype: 'bfloat16',
+              reduce_dtype: 'float32',
+              buffer_dtype: 'bfloat16',
+            },
+            deepspeed: 'no',
+          },
+        }}
+      />,
+    );
+    for (const text of [
+      'bf16 (via: accelerator)',
+      'matmul true, cudnn false, float32 matmul precision high',
+      'cuda:bfloat16, cpu:bfloat16',
+      'transformer_engine (recipe DelayedScaling)',
+      'MixedPrecision: param bfloat16, reduce float32, buffer bfloat16',
+      'no',
+    ]) {
+      expect(screen.getByText(text)).toBeVisible();
+    }
+  });
+
+  it('names no FP8 backend when accelerate reported none', () => {
+    render(<AIBOMTrainingSection training={{ precision: { fp8: { backend: null } } }} />);
+    expect(screen.getByText('unknown backend')).toBeVisible();
+  });
+
   it('shows only the original fields for an older AIBOM', () => {
     render(<AIBOMTrainingSection training={{ optimizer: 'adamw_torch', determinism: null }} />);
     expect(screen.getByText('adamw_torch')).toBeVisible();
-    for (const label of ['Seeds', 'Optimizer params', 'LR scheduler', 'Determinism']) {
+    for (const label of [
+      'Seeds',
+      'Optimizer params',
+      'LR scheduler',
+      'Determinism',
+      'TF32',
+      'Autocast',
+    ]) {
       expect(screen.queryByText(label)).toBeNull();
     }
   });
