@@ -5,6 +5,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
 import { buildPerformanceRows } from '../../utils/comparePerformance';
 import type { MetricSet, PerformanceCell } from '../../utils/comparePerformance';
+import { withUnit } from '../../utils/formatMetricValue';
 import { runColor } from '../../utils/runColors';
 
 interface AIBOMComparePerformanceTableProps {
@@ -21,7 +22,7 @@ const signColor = (value: number): 'green' | 'red' | undefined => {
 };
 
 const formatCell = (cell: PerformanceCell): string =>
-  cell.unavailable ? '—' : `${cell.avg.toFixed(2)} ${cell.unit}`.trim();
+  cell.unavailable ? '—' : withUnit(cell.avg.toFixed(2), cell.unit);
 
 const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
   items,

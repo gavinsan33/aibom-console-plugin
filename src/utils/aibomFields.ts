@@ -76,6 +76,10 @@ export const getMetricAvg = (a: AIBOMResource, metricKey: string): number => {
   return toFlexNumber(stats?.avg) ?? 0;
 };
 
+/** True when the run recorded this hardware metric at all. */
+export const hasMetric = (a: AIBOMResource, metricKey: string): boolean =>
+  a.spec?.data?.resource_utilization?.metrics?.[metricKey] != null;
+
 export const getMetricUnit = (a: AIBOMResource, metricKey: string): string =>
   a.spec?.data?.resource_utilization?.metrics?.[metricKey]?.unit ?? '';
 

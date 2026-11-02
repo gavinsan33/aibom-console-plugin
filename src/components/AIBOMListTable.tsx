@@ -13,8 +13,10 @@ import {
   getMetricUnit,
   getModelName,
   getQuantization,
+  hasMetric,
 } from '../utils/aibomFields';
 import { SORTABLE_METRICS } from '../types/aibom';
+import { withUnit } from '../utils/formatMetricValue';
 import { formatTimestamp } from '../utils/formatTimestamp';
 import { defaultAscending } from '../utils/listUrlState';
 
@@ -115,7 +117,12 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
             <Td dataLabel={t('Collected at')}>{formatTimestamp(getCollectedAt(item))}</Td>
             {metricKey && (
               <Td dataLabel={sortKey}>
-                {getMetricAvg(item, metricKey).toFixed(2)} {getMetricUnit(item, metricKey)}
+                {hasMetric(item, metricKey)
+                  ? withUnit(
+                      getMetricAvg(item, metricKey).toFixed(2),
+                      getMetricUnit(item, metricKey),
+                    )
+                  : '—'}
               </Td>
             )}
           </Tr>

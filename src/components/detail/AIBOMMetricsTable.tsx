@@ -4,6 +4,7 @@ import { Content, Label, Title } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { MetricSegments, MetricStats } from '../../types/aibom';
 import { toFlexNumber } from '../../utils/flexible';
+import { unitLabel } from '../../utils/formatMetricValue';
 
 interface AIBOMMetricsTableProps {
   title: string;
@@ -91,7 +92,7 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
                 </Td>
                 <Td dataLabel={t('Limit')}>{limit?.toFixed(2) ?? '—'}</Td>
                 <Td dataLabel={t('P95')}>{toFlexNumber(stats?.p95)?.toFixed(2) ?? '—'}</Td>
-                <Td dataLabel={t('Unit')}>{stats?.unit ?? ''}</Td>
+                <Td dataLabel={t('Unit')}>{unitLabel(stats?.unit)}</Td>
                 <Td dataLabel={t('1st -> mid -> last')}>
                   {`${formatSegment(stats?.segments?.first_third)} -> ${formatSegment(
                     stats?.segments?.middle_third,

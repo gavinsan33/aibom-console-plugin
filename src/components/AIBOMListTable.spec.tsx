@@ -51,7 +51,7 @@ describe('AIBOMListTable', () => {
       />,
     );
     expect(screen.getByText('gpu-utilization')).toBeInTheDocument();
-    expect(screen.getByText('42.00 %')).toBeInTheDocument();
+    expect(screen.getByText('42.00%')).toBeInTheDocument();
   });
 
   it('calls onToggleSelect with the item key when its checkbox is clicked', () => {

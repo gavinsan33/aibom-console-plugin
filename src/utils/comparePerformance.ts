@@ -12,12 +12,13 @@ import {
   getMetricUnit,
   getResourceUtilizationNote,
   hasInferenceMetric,
+  hasMetric,
 } from './aibomFields';
 
 export interface PerformanceCell {
   avg: number;
   unit: string;
-  /** True when this item has no value for this metric (hardware: `resource_utilization.note` set; inference: the engine didn't export it) -- the avg is a meaningless 0 in that case, render "—" instead. */
+  /** True when this item has no value for this metric (hardware: `resource_utilization.note` set or the metric missing; inference: the engine didn't export it) -- the avg is a meaningless 0 in that case, render "—" instead. */
   unavailable: boolean;
 }
 
@@ -43,7 +44,9 @@ const HARDWARE: MetricSet = {
   labels: HARDWARE_METRIC_LABELS,
   getAvg: getMetricAvg,
   getUnit: getMetricUnit,
-  unavailable: (a) => getResourceUtilizationNote(a) !== '',
+  // A note means collection failed outright; a missing key means this metric
+  // wasn't collected. Either way the avg is a placeholder 0, not a reading.
+  unavailable: (a, key) => getResourceUtilizationNote(a) !== '' || !hasMetric(a, key),
 };
 
 export const INFERENCE: MetricSet = {

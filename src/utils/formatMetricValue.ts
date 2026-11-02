@@ -22,6 +22,24 @@ function scaleBytes(value: number, startStep: number): { scaled: number; step: n
   return { scaled, step };
 }
 
+/** Short display names for the stat units the webhook writes into `spec.data`. */
+const UNIT_LABELS: Record<string, string> = {
+  percent: '%',
+  watts: 'W',
+  seconds: 's',
+  tokens_per_sec: 'tok/s',
+  MBps: 'MB/s',
+};
+
+export const unitLabel = (unit?: string): string => (unit ? (UNIT_LABELS[unit] ?? unit) : '');
+
+/** A table value with its stat unit, e.g. `12.00%`, `113.62 W`, `7.14 MB/s`. */
+export function withUnit(value: string, unit?: string): string {
+  const label = unitLabel(unit);
+  if (label === '') return value;
+  return label === '%' ? `${value}%` : `${value} ${label}`;
+}
+
 /** How a chart shows one metric: raw value / `factor`, then `suffix`. One scale per chart, so every tick and tooltip reads in the same unit. */
 export interface MetricScale {
   factor: number;

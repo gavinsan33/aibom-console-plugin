@@ -1,4 +1,10 @@
-import { formatScaled, limitInSeriesUnit, metricScale, yAxisTicks } from './formatMetricValue';
+import {
+  formatScaled,
+  limitInSeriesUnit,
+  metricScale,
+  withUnit,
+  yAxisTicks,
+} from './formatMetricValue';
 
 describe('metricScale / formatScaled', () => {
   const fmt = (value: number, unit?: string, metricKey?: string) =>
@@ -31,6 +37,23 @@ describe('metricScale / formatScaled', () => {
   it('formats every value on one chart in the same unit', () => {
     const scale = metricScale(8 * 1024 ** 3, 'bytes');
     expect(formatScaled(512 * 1024 ** 2, scale)).toBe('0.5 GiB');
+  });
+});
+
+describe('withUnit', () => {
+  it('uses short unit names', () => {
+    expect(withUnit('12.00', 'percent')).toBe('12.00%');
+    expect(withUnit('113.62', 'watts')).toBe('113.62 W');
+    expect(withUnit('0.24', 'seconds')).toBe('0.24 s');
+    expect(withUnit('7.14', 'MBps')).toBe('7.14 MB/s');
+    expect(withUnit('172.06', 'tokens_per_sec')).toBe('172.06 tok/s');
+  });
+
+  it('keeps other units and omits a missing one', () => {
+    expect(withUnit('7.95', 'Mbps')).toBe('7.95 Mbps');
+    expect(withUnit('3.81', 'GiB')).toBe('3.81 GiB');
+    expect(withUnit('12.62', 'requests')).toBe('12.62 requests');
+    expect(withUnit('3', '')).toBe('3');
   });
 });
 
