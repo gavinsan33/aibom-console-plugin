@@ -69,7 +69,7 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
             <Th>{t('Limit')}</Th>
             <Th>{t('P95')}</Th>
             <Th>{t('Unit')}</Th>
-            <Th>{t('1st -> mid -> last')}</Th>
+            <Th>{t('1st → mid → last')}</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -93,10 +93,10 @@ const AIBOMMetricsTable: FC<AIBOMMetricsTableProps> = ({
                 <Td dataLabel={t('Limit')}>{limit?.toFixed(2) ?? '—'}</Td>
                 <Td dataLabel={t('P95')}>{toFlexNumber(stats?.p95)?.toFixed(2) ?? '—'}</Td>
                 <Td dataLabel={t('Unit')}>{unitLabel(stats?.unit)}</Td>
-                <Td dataLabel={t('1st -> mid -> last')}>
-                  {`${formatSegment(stats?.segments?.first_third)} -> ${formatSegment(
+                <Td dataLabel={t('1st → mid → last')}>
+                  {`${formatSegment(stats?.segments?.first_third)} → ${formatSegment(
                     stats?.segments?.middle_third,
-                  )} -> ${formatSegment(stats?.segments?.last_third)}`}
+                  )} → ${formatSegment(stats?.segments?.last_third)}`}
                 </Td>
               </Tr>
             );

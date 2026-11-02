@@ -30,7 +30,7 @@ const AIBOMModelSection: FC<AIBOMModelSectionProps> = ({ model }) => {
       !!model.speculative_decoding?.enabled);
   if (!hasModel) {
     return (
-      <Section title={t('Model')} md={6}>
+      <Section title={t('Model')}>
         <Content component="p">{t('No model was detected for this workload.')}</Content>
       </Section>
     );
@@ -39,7 +39,7 @@ const AIBOMModelSection: FC<AIBOMModelSectionProps> = ({ model }) => {
   const spec = model.speculative_decoding;
 
   return (
-    <Section title={t('Model')} md={6}>
+    <Section title={t('Model')}>
       <DescriptionList isHorizontal isCompact columnModifier={{ default: '1Col', md: '2Col' }}>
         <Field label={t('Name')}>
           {model.name &&

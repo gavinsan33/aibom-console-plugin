@@ -67,7 +67,8 @@ const AIBOMDetailPage: FC = () => {
   }) as [AIBOMResource | undefined, boolean, unknown];
 
   const data = item?.spec?.data;
-  const title = item?.spec?.jobName ?? name ?? t('AIBOM');
+  // The AIBOM's own name, not its job's: re-runs of one job share the job name.
+  const title = item?.metadata?.name ?? name ?? t('AIBOM');
 
   return (
     <>

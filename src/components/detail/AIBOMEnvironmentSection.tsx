@@ -1,10 +1,13 @@
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DescriptionList } from '@patternfly/react-core';
+import { DescriptionList, Stack } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { formatFlexNumber, toFlexNumber } from '../../utils/flexible';
 import Field from './Field';
-import AIBOMHardwareDetails from './AIBOMHardwareDetails';
+import AIBOMHardwareDetails, {
+  ENVIRONMENT_TERM_WIDTH,
+  formatGpuMemory,
+} from './AIBOMHardwareDetails';
 import Section from './Section';
 
 /** "CUDA 13.0, cuDNN 9.24.0, NCCL 2.30.7", like `oc-aibom`'s Torch Build line. */
@@ -32,28 +35,39 @@ const AIBOMEnvironmentSection: FC<AIBOMEnvironmentSectionProps> = ({ environment
 
   return (
     <Section title={t('Environment')}>
-      <DescriptionList isHorizontal isCompact columnModifier={{ default: '1Col', md: '2Col' }}>
-        <Field label={t('GPU')}>
-          {environment.gpu_type &&
-            `${environment.gpu_type} x${formatFlexNumber(environment.gpu_count)}`}
-        </Field>
-        <Field label={t('CPU')}>
-          {environment.cpu_model &&
-            `${environment.cpu_model} (${formatFlexNumber(environment.cpu_cores)} cores)`}
-        </Field>
-        <Field label={t('Memory')}>
-          {memoryGb !== undefined &&
-            `${memoryGb.toFixed(2)} GB (${formatFlexNumber(environment.numa_nodes)} NUMA node(s))`}
-        </Field>
-        <Field label={t('CUDA version')}>{environment.cuda_version}</Field>
-        <Field label={t('Driver version')}>{environment.driver_version}</Field>
-        <Field label={t('Framework version')}>{environment.framework_version}</Field>
-        <Field label={t('Kernel version')}>{environment.kernel_version}</Field>
-        <Field label={t('Python version')}>{environment.python_version}</Field>
-        {/* CUDA version above is the driver's; this is what torch was built with. */}
-        <Field label={t('Torch build')}>{formatTorchBuild(environment)}</Field>
-      </DescriptionList>
-      <AIBOMHardwareDetails environment={environment} />
+      {/* The only child of the card body, so Stack's `height: 100%` fits the card. */}
+      <Stack hasGutter>
+        <DescriptionList
+          isHorizontal
+          isCompact
+          columnModifier={{ default: '1Col', md: '2Col' }}
+          horizontalTermWidthModifier={{ default: ENVIRONMENT_TERM_WIDTH }}
+        >
+          <Field label={t('GPU')}>
+            {environment.gpu_type &&
+              `${environment.gpu_type} x${formatFlexNumber(environment.gpu_count)}`}
+          </Field>
+          <Field label={t('GPU memory')}>
+            {environment.gpu_memory_mb && formatGpuMemory(environment.gpu_memory_mb)}
+          </Field>
+          <Field label={t('CPU')}>
+            {environment.cpu_model &&
+              `${environment.cpu_model} (${formatFlexNumber(environment.cpu_cores)} cores)`}
+          </Field>
+          <Field label={t('Memory')}>
+            {memoryGb !== undefined &&
+              `${memoryGb.toFixed(2)} GB (${formatFlexNumber(environment.numa_nodes)} NUMA node(s))`}
+          </Field>
+          <Field label={t('CUDA version')}>{environment.cuda_version}</Field>
+          <Field label={t('Driver version')}>{environment.driver_version}</Field>
+          <Field label={t('Framework version')}>{environment.framework_version}</Field>
+          <Field label={t('Kernel version')}>{environment.kernel_version}</Field>
+          <Field label={t('Python version')}>{environment.python_version}</Field>
+          {/* CUDA version above is the driver's; this is what torch was built with. */}
+          <Field label={t('Torch build')}>{formatTorchBuild(environment)}</Field>
+        </DescriptionList>
+        <AIBOMHardwareDetails environment={environment} />
+      </Stack>
     </Section>
   );
 };

@@ -4,6 +4,7 @@ import { Label } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMPod } from '../../types/aibom';
 import { podStatusColor } from '../../utils/podStatus';
+import { formatTimestamp } from '../../utils/formatTimestamp';
 import Section from './Section';
 
 interface AIBOMPodsSectionProps {
@@ -32,7 +33,7 @@ const AIBOMPodsSection: FC<AIBOMPodsSectionProps> = ({ pods }) => {
               <Td dataLabel={t('Name')}>{pod.pod_name ?? '—'}</Td>
               <Td dataLabel={t('Node')}>{pod.node_name ?? '—'}</Td>
               <Td dataLabel={t('IP')}>{pod.pod_ip ?? '—'}</Td>
-              <Td dataLabel={t('Start')}>{pod.start_time ?? '—'}</Td>
+              <Td dataLabel={t('Start')}>{formatTimestamp(pod.start_time)}</Td>
               <Td dataLabel={t('Status')}>
                 {pod.status ? <Label color={podStatusColor(pod.status)}>{pod.status}</Label> : '—'}
               </Td>
