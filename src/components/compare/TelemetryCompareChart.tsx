@@ -22,6 +22,8 @@ interface TelemetryCompareChartProps {
   title: string;
   runs: CompareChartRun[];
   unit?: string;
+  /** Metric key, for picking the same display unit as the tables. */
+  metricKey?: string;
   /** Draw each run's pods/GPUs individually instead of one aggregate line. */
   expanded: boolean;
   /** Zoom to this chart's own data instead of the shared x range. */
@@ -41,6 +43,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
   title,
   runs,
   unit,
+  metricKey,
   expanded,
   fitToData = false,
   limit,
@@ -67,6 +70,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
       lines={lines}
       legend={runs.map(({ name, colorIndex }) => ({ name, colorIndex }))}
       unit={unit}
+      metricKey={metricKey}
       xMax={xMax}
       limit={limit}
     />

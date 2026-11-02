@@ -77,6 +77,7 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
                 <TelemetryCompareChart
                   title={spec.title}
                   unit={stored.metrics[spec.metricKey].unit}
+                  metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
                   limit={limits?.[spec.metricKey]}

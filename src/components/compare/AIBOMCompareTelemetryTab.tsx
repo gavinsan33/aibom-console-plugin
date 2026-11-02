@@ -39,6 +39,7 @@ interface AIBOMCompareTelemetryTabProps {
 interface ChartSpec {
   key: string;
   title: string;
+  metricKey: string;
   unit?: string;
   runs: CompareChartRun[];
   limit?: number;
@@ -85,6 +86,7 @@ function buildChartSpecs(
           {
             key: `${keyPrefix}-${metricKey}`,
             title: labels[metricKey] ?? metricKey,
+            metricKey,
             unit,
             runs,
             limit,
@@ -150,6 +152,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
                   title={spec.title}
                   runs={spec.runs}
                   unit={spec.unit}
+                  metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
                   limit={spec.limit}
