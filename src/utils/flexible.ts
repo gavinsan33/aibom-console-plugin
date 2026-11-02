@@ -30,3 +30,9 @@ export function formatFlexNumber(value: unknown, digits?: number): string {
   if (num === undefined) return '—';
   return digits === undefined ? String(num) : num.toFixed(digits);
 }
+
+/** `a / b / c` of flex numbers, or `undefined` when none is set (so a `Field` hides the row); unset parts show as —. */
+export const formatFlexTuple = (values: unknown[]): string | undefined =>
+  values.some((value) => toFlexNumber(value) !== undefined)
+    ? values.map((value) => formatFlexNumber(value)).join(' / ')
+    : undefined;

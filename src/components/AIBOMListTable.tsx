@@ -13,8 +13,10 @@ import {
   getMetricUnit,
   getModelName,
   getQuantization,
+  hasMetric,
 } from '../utils/aibomFields';
 import { SORTABLE_METRICS } from '../types/aibom';
+import { withUnit } from '../utils/formatMetricValue';
 import { formatTimestamp } from '../utils/formatTimestamp';
 import { defaultAscending } from '../utils/listUrlState';
 
@@ -25,6 +27,8 @@ interface AIBOMListTableProps {
   onSort: (sortKey: SortKey, ascending: boolean) => void;
   selected: Set<string>;
   onToggleSelect: (key: string) => void;
+  /** Add a Namespace column -- set when viewing all projects, where runs of the same job in different namespaces otherwise look identical. */
+  showNamespace?: boolean;
 }
 
 const itemKey = (item: AIBOMResource): string =>
@@ -37,6 +41,7 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
   onSort,
   selected,
   onToggleSelect,
+  showNamespace = false,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const metricKey = sortKey === 'age' ? undefined : SORTABLE_METRICS[sortKey];
@@ -50,6 +55,9 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
   const sortDirection: SortByDirection = displayAscending
     ? SortByDirection.asc
     : SortByDirection.desc;
+
+  // Sortable columns' indexes shift by one when the Namespace column is shown.
+  const collectedAtIndex = showNamespace ? 6 : 5;
 
   const sortParams = (key: SortKey, index: number) => ({
     sort: {
@@ -70,12 +78,13 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
         <Tr>
           <Th screenReaderText={t('Selected')} />
           <Th>{t('Job')}</Th>
+          {showNamespace && <Th>{t('Namespace')}</Th>}
           <Th>{t('Model')}</Th>
           <Th>{t('Experiment intent')}</Th>
           <Th>{t('Quantization')}</Th>
           <Th>{t('GPU type')}</Th>
-          <Th {...sortParams('age', 5)}>{t('Collected at')}</Th>
-          {metricKey && <Th {...sortParams(sortKey, 6)}>{sortKey}</Th>}
+          <Th {...sortParams('age', collectedAtIndex)}>{t('Collected at')}</Th>
+          {metricKey && <Th {...sortParams(sortKey, collectedAtIndex + 1)}>{sortKey}</Th>}
         </Tr>
       </Thead>
       <Tbody>
@@ -100,6 +109,7 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
                 getJobName(item) || '—'
               )}
             </Td>
+            {showNamespace && <Td dataLabel={t('Namespace')}>{item.metadata?.namespace ?? '—'}</Td>}
             <Td dataLabel={t('Model')}>{getModelName(item) || '—'}</Td>
             <Td dataLabel={t('Experiment intent')}>{getExperimentIntent(item) || '—'}</Td>
             <Td dataLabel={t('Quantization')}>{getQuantization(item) || '—'}</Td>
@@ -107,7 +117,12 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
             <Td dataLabel={t('Collected at')}>{formatTimestamp(getCollectedAt(item))}</Td>
             {metricKey && (
               <Td dataLabel={sortKey}>
-                {getMetricAvg(item, metricKey).toFixed(2)} {getMetricUnit(item, metricKey)}
+                {hasMetric(item, metricKey)
+                  ? withUnit(
+                      getMetricAvg(item, metricKey).toFixed(2),
+                      getMetricUnit(item, metricKey),
+                    )
+                  : '—'}
               </Td>
             )}
           </Tr>

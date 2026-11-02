@@ -51,7 +51,7 @@ describe('AIBOMListTable', () => {
       />,
     );
     expect(screen.getByText('gpu-utilization')).toBeInTheDocument();
-    expect(screen.getByText('42.00 %')).toBeInTheDocument();
+    expect(screen.getByText('42.00%')).toBeInTheDocument();
   });
 
   it('calls onToggleSelect with the item key when its checkbox is clicked', () => {
@@ -68,5 +68,25 @@ describe('AIBOMListTable', () => {
     );
     fireEvent.click(screen.getByRole('checkbox'));
     expect(onToggleSelect).toHaveBeenCalledWith('ns/run-a');
+  });
+
+  it('shows a Namespace column only when asked', () => {
+    const props = {
+      items: [item('run-a')],
+      sortKey: 'age' as const,
+      ascending: false,
+      onSort: jest.fn(),
+      selected: new Set<string>(),
+      onToggleSelect: jest.fn(),
+    };
+    const { rerender } = renderWithRouter(<AIBOMListTable {...props} />);
+    expect(screen.queryByText('Namespace')).not.toBeInTheDocument();
+    rerender(
+      <MemoryRouter>
+        <AIBOMListTable {...props} showNamespace />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Namespace')).toBeInTheDocument();
+    expect(screen.getByText('ns')).toBeInTheDocument();
   });
 });

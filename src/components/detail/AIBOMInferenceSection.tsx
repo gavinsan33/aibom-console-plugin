@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DescriptionList, Divider, Stack, StackItem } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { INFERENCE_METRIC_LABELS, INFERENCE_METRIC_ORDER } from '../../types/aibom';
-import { formatFlexNumber } from '../../utils/flexible';
+import { formatFlexNumber, formatFlexTuple } from '../../utils/flexible';
 import AIBOMMetricsTable from './AIBOMMetricsTable';
 import Field from './Field';
 import Section from './Section';
@@ -26,9 +26,11 @@ const AIBOMInferenceSection: FC<AIBOMInferenceSectionProps> = ({ inference }) =>
             <Field label={t('Serving engine')}>{inference.serving_engine}</Field>
             <Field label={t('Max model len')}>{formatFlexNumber(inference.max_model_len)}</Field>
             <Field label={t('Tensor / pipeline / data parallel')}>
-              {`${formatFlexNumber(inference.tensor_parallel_size)} / ${formatFlexNumber(
+              {formatFlexTuple([
+                inference.tensor_parallel_size,
                 inference.pipeline_parallel_size,
-              )} / ${formatFlexNumber(inference.data_parallel_size)}`}
+                inference.data_parallel_size,
+              ])}
             </Field>
             <Field label={t('Expert parallel')}>
               {inference.enable_expert_parallel === undefined
@@ -39,9 +41,7 @@ const AIBOMInferenceSection: FC<AIBOMInferenceSectionProps> = ({ inference }) =>
               {formatFlexNumber(inference.gpu_memory_utilization)}
             </Field>
             <Field label={t('Temperature / top-p / top-k')}>
-              {`${formatFlexNumber(inference.temperature)} / ${formatFlexNumber(inference.top_p)} / ${formatFlexNumber(
-                inference.top_k,
-              )}`}
+              {formatFlexTuple([inference.temperature, inference.top_p, inference.top_k])}
             </Field>
             <Field label={t('Max tokens')}>{formatFlexNumber(inference.max_tokens)}</Field>
             <Field label={t('Served model name')}>{inference.served_model_name}</Field>

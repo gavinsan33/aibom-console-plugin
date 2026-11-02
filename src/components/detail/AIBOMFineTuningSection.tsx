@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DescriptionList } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
-import { formatFlexNumber } from '../../utils/flexible';
+import { formatFlexTuple } from '../../utils/flexible';
 import Field from './Field';
 import Section from './Section';
 
@@ -19,7 +19,7 @@ const AIBOMFineTuningSection: FC<AIBOMFineTuningSectionProps> = ({ fineTuning })
       <DescriptionList isHorizontal isCompact>
         <Field label={t('Adaptation method')}>{fineTuning.adaptation_method}</Field>
         <Field label={t('LoRA rank / alpha')}>
-          {`${formatFlexNumber(fineTuning.lora_rank)} / ${formatFlexNumber(fineTuning.lora_alpha)}`}
+          {formatFlexTuple([fineTuning.lora_rank, fineTuning.lora_alpha])}
         </Field>
       </DescriptionList>
     </Section>

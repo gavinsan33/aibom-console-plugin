@@ -8,7 +8,8 @@ import {
 } from '@patternfly/react-charts/victory';
 import type { ChartLine as ChartLineModel } from '../../utils/compareLines';
 import { formatDuration } from '../../utils/executionMetadata';
-import { formatMetricValue } from '../../utils/formatMetricValue';
+import type { MetricScale } from '../../utils/formatMetricValue';
+import { formatScaled, metricScale, yAxisTicks } from '../../utils/formatMetricValue';
 import { runChartColor } from '../../utils/runColors';
 
 interface TelemetryLineChartProps {
@@ -17,6 +18,8 @@ interface TelemetryLineChartProps {
   /** One legend entry per compared run (not per expanded series). */
   legend: { name: string; colorIndex: number }[];
   unit?: string;
+  /** `HARDWARE_METRIC_ORDER`/`INFERENCE_METRIC_ORDER` key; picks Mbps/MB/s for throughput to match the tables. */
+  metricKey?: string;
   /** Fixes the x-axis to `[0, xMax]` elapsed seconds; auto-fits to this chart's own data when omitted. */
   xMax?: number;
   /** Hardware metric limit to show as a horizontal red line. */
@@ -25,7 +28,16 @@ interface TelemetryLineChartProps {
 
 const PLOT_HEIGHT = 220;
 const FALLBACK_WIDTH = 600;
-const PADDING = { top: 16, right: 24, left: 80 };
+const PADDING = { top: 16, right: 24 };
+/**
+ * Victory doesn't size the y-axis gutter to its labels, so wide ones were
+ * clipped on the left ("9.54 MiB/s" drew as ".54 MiB/s"). Size it from the
+ * longest tick label instead.
+ * ponytail: approximate glyph width, measure text if labels still clip.
+ */
+const TICK_CHAR_WIDTH = 8;
+const TICK_GUTTER = 20;
+const MIN_LEFT_PADDING = 48;
 /** Room under the plot for the x-axis ticks before the legend starts. */
 const AXIS_ALLOWANCE = 50;
 const LEGEND_ROW_HEIGHT = 28;
@@ -70,9 +82,9 @@ function useContainerWidth(): [React.RefObject<HTMLDivElement>, number] {
 }
 
 const tooltipLabel =
-  (unit?: string) =>
+  (scale: MetricScale) =>
   ({ datum }: { datum: { x: number; y: number; name: string } }): string =>
-    `${datum.name}\n${formatMetricValue(datum.y, unit)} at ${formatDuration(datum.x) ?? '0s'}`;
+    `${datum.name}\n${formatScaled(datum.y, scale)} at ${formatDuration(datum.x) ?? '0s'}`;
 
 /**
  * Multi-run line chart on PatternFly's chart library. The x-axis is elapsed
@@ -84,13 +96,25 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
   lines,
   legend,
   unit,
+  metricKey,
   xMax,
   limit,
 }) => {
   const [ref, width] = useContainerWidth();
+  const maxValue = Math.max(
+    limit !== undefined && limit > 0 ? limit : 0,
+    ...lines.flatMap((line) => line.points.map((p) => p.y)),
+  );
+  const scale = metricScale(maxValue, unit, metricKey);
+  const ticks = yAxisTicks(maxValue, scale);
+  const tickLabels = ticks.map((tick) => formatScaled(tick, scale));
+  const left = Math.max(
+    MIN_LEFT_PADDING,
+    Math.max(...tickLabels.map((label) => label.length)) * TICK_CHAR_WIDTH + TICK_GUTTER,
+  );
   const rows = legendRowCount(
     legend.map((run) => run.name),
-    width - PADDING.left - PADDING.right,
+    width - left - PADDING.right,
   );
   const bottom = AXIS_ALLOWANCE + rows * LEGEND_ROW_HEIGHT;
   return (
@@ -99,9 +123,11 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
         ariaTitle={title}
         width={width}
         height={PLOT_HEIGHT + PADDING.top + bottom}
-        padding={{ ...PADDING, bottom }}
-        minDomain={{ y: 0 }}
-        domain={xMax === undefined ? undefined : { x: [0, xMax] }}
+        padding={{ ...PADDING, left, bottom }}
+        domain={{
+          y: [0, ticks[ticks.length - 1]],
+          ...(xMax === undefined ? {} : { x: [0, xMax] as [number, number] }),
+        }}
         legendData={legend.map((run) => ({
           name: run.name,
           symbol: { fill: runChartColor(run.colorIndex) },
@@ -109,7 +135,7 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
         legendPosition="bottom"
         legendAllowWrap
         containerComponent={
-          <ChartVoronoiContainer constrainToVisibleArea labels={tooltipLabel(unit)} />
+          <ChartVoronoiContainer constrainToVisibleArea labels={tooltipLabel(scale)} />
         }
       >
         <ChartAxis
@@ -117,7 +143,12 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
           fixLabelOverlap
           tickFormat={(x: number) => formatDuration(x) ?? '0s'}
         />
-        <ChartAxis dependentAxis showGrid tickFormat={(y: number) => formatMetricValue(y, unit)} />
+        <ChartAxis
+          dependentAxis
+          showGrid
+          tickValues={ticks}
+          tickFormat={(_y: number, index: number) => tickLabels[index]}
+        />
         {lines.map((line, i) => (
           <ChartLine
             key={`${line.name}-${String(i)}`}

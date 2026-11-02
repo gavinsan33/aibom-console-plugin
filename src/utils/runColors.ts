@@ -19,3 +19,21 @@ export const runChartColor = (index: number): string =>
 
 export const runColor = (index: number): NonNullable<LabelProps['color']> =>
   RUN_COLORS[index % RUN_COLORS.length];
+
+/**
+ * Each compared run's display name: its job name, plus the AIBOM name's
+ * generated suffix (`aibom-x-jbg98` -> `jbg98`) when another compared run has
+ * the same job name -- re-runs of one job otherwise look identical in table
+ * headers, chart legends and the "left out" note.
+ */
+export function runLabels(runs: { jobName: string; name: string }[]): string[] {
+  const bases = runs.map((run) => run.jobName || run.name);
+  return runs.map((run, i) => {
+    if (bases.filter((base) => base === bases[i]).length < 2) return bases[i];
+    const suffix =
+      run.jobName && run.name.startsWith(`${run.jobName}-`)
+        ? run.name.slice(run.jobName.length + 1)
+        : run.name;
+    return suffix === bases[i] ? bases[i] : `${bases[i]} (${suffix})`;
+  });
+}

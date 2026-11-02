@@ -60,6 +60,14 @@ describe('buildPerformanceRows', () => {
     expect(gpu?.values[1].unavailable).toBe(true);
   });
 
+  it('flags a hardware metric unavailable when the run never recorded it', () => {
+    const noMetrics = { spec: { data: { resource_utilization: {} } } } as AIBOMResource;
+    const rows = buildPerformanceRows([withMetric(50), noMetrics]);
+    const gpu = rows.find((r) => r.metricKey === 'gpu_utilization');
+    expect(gpu?.values.map((v) => v.unavailable)).toEqual([false, true]);
+    expect(gpu?.delta).toBeUndefined();
+  });
+
   it('flags an inference metric unavailable per metric, with no delta against it', () => {
     // TGI exports no TTFT: it must blank, not diff as -100% against vLLM's.
     const vllm = withInference({ time_to_first_token_seconds: 0.12, generation_throughput: 100 });
