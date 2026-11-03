@@ -68,7 +68,9 @@ RBAC/DCGM notes.
 Charts use `@patternfly/react-charts` (Victory; bundled -- the console doesn't
 share it -- ~313 KiB min, one lazy chunk). Compared runs happened at different
 times, so every line is plotted against elapsed time since that run's own start,
-in the run's `runChartColor` (matches its `Label` in the tables). Every chart in a
+in the run's `runChartColor` (matches its `Label` in the tables). Clicking a run's `Label` above the
+charts hides its lines and limits (outlined label; the last shown run can't be hidden), and the
+charts rescale to the runs still shown -- unlike `oc-aibom graph`'s `1`-`9`, which keep the scale. Every chart in a
 tab shares the same x range, `[0, longest window]` (`sharedElapsedMax`), rather than
 auto-fitting its own data: metrics start reporting at different times (vLLM's only
 once the server is up, TTFT only once a request completes), and auto-fitting stretched

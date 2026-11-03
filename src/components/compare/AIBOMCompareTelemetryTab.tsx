@@ -26,7 +26,6 @@ import {
   INFERENCE_METRIC_ORDER,
 } from '../../types/aibom';
 import type { StoredTelemetry } from '../../types/telemetrySeries';
-import type { ChartLimit } from '../../utils/compareLines';
 import { groupLimits } from '../../utils/compareLines';
 import { toFlexNumber } from '../../utils/flexible';
 import { limitInSeriesUnit } from '../../utils/formatMetricValue';
@@ -48,7 +47,7 @@ interface ChartSpec {
   metricKey: string;
   unit?: string;
   runs: CompareChartRun[];
-  limits: ChartLimit[];
+  runLimits: { name: string; colorIndex: number; limit?: number }[];
 }
 
 /**
@@ -97,7 +96,7 @@ function buildChartSpecs(
             metricKey,
             unit,
             runs,
-            limits: groupLimits(runLimits),
+            runLimits,
           },
         ]
       : [];
@@ -109,6 +108,8 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
   const [expanded, setExpanded] = useState(false);
   const [fitToData, setFitToData] = useState(false);
   const [showLimits, setShowLimits] = useState(true);
+  // Run indices hidden by clicking their label above the charts.
+  const [hidden, setHidden] = useState<number[]>([]);
   const { loading, byItem, mismatched } = useStoredTelemetry(items);
 
   const { hardware, inference } = useMemo(
@@ -159,12 +160,18 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
               <CardBody>
                 <TelemetryCompareChart
                   title={spec.title}
-                  runs={spec.runs}
+                  runs={spec.runs.filter((run) => !hidden.includes(run.colorIndex))}
                   unit={spec.unit}
                   metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
-                  limits={showLimits ? spec.limits : undefined}
+                  limits={
+                    showLimits
+                      ? groupLimits(
+                          spec.runLimits.filter((run) => !hidden.includes(run.colorIndex)),
+                        )
+                      : undefined
+                  }
                 />
               </CardBody>
             </Card>
@@ -179,7 +186,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
         <Stack hasGutter>
           <Content component="p">
             {t(
-              'Time axes show elapsed time since each run started, so runs from different times line up.',
+              'Time axes show elapsed time since each run started, so runs from different times line up. Click a run to hide or show its lines.',
             )}
           </Content>
           {mismatched.length > 0 && (
@@ -200,13 +207,26 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
               )}
             </Content>
           )}
-          {/* The charts' legend: each line is drawn in its run's label color. */}
+          {/* The charts' legend: each line is drawn in its run's label color.
+              Clicking a label hides that run's lines (and limits); the last
+              shown run can't be hidden, so the charts never go empty. */}
           <LabelGroup numLabels={runNames.length} aria-label={t('Compared runs')}>
-            {runNames.map((name, index) => (
-              <Label key={`${name}-${String(index)}`} color={runColor(index)}>
-                {name}
-              </Label>
-            ))}
+            {runNames.map((name, index) => {
+              const isHidden = hidden.includes(index);
+              return (
+                <Label
+                  key={`${name}-${String(index)}`}
+                  color={runColor(index)}
+                  variant={isHidden ? 'outline' : 'filled'}
+                  onClick={() => {
+                    if (isHidden) setHidden(hidden.filter((i) => i !== index));
+                    else if (hidden.length < runNames.length - 1) setHidden([...hidden, index]);
+                  }}
+                >
+                  {name}
+                </Label>
+              );
+            })}
           </LabelGroup>
           <Flex spaceItems={{ default: 'spaceItemsXl' }}>
             <FlexItem>
@@ -228,7 +248,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
             </FlexItem>
             {/* Hiding the limits drops them from the y range too, so each chart
                 rescales to its own data instead of staying sized to a far-off limit. */}
-            {hardware.some((spec) => spec.limits.length > 0) && (
+            {hardware.some((spec) => groupLimits(spec.runLimits).length > 0) && (
               <FlexItem>
                 <Switch
                   id="aibom-compare-telemetry-limits"

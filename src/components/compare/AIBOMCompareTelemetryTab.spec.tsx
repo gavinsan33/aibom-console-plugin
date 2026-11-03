@@ -4,6 +4,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import type { AIBOMResource } from '../../types/aibom';
 import AIBOMCompareTelemetryTab from './AIBOMCompareTelemetryTab';
 
+const mockLineChart = jest.fn<null, [unknown]>(() => null);
+jest.mock('./TelemetryLineChart', () => ({
+  __esModule: true,
+  default: (props: unknown) => mockLineChart(props),
+}));
+
 const seriesJson = JSON.stringify({
   schema_version: 1,
   window: { start: 1000, end: 1600, step_seconds: 30 },
@@ -83,6 +89,26 @@ describe('AIBOMCompareTelemetryTab', () => {
       name: 'a-telemetry-ab12',
       isList: false,
     });
+  });
+
+  it('hides a run by clicking its label, but never the last one shown', async () => {
+    mockSeriesObjects();
+    render(
+      <AIBOMCompareTelemetryTab
+        items={[run('a', 1, true), run('b', 1, true)]}
+        runNames={['run-a', 'run-b']}
+      />,
+    );
+    const charted = () =>
+      (mockLineChart.mock.calls.at(-1)?.[0] as { lines: { name: string }[] }).lines.map(
+        (line) => line.name,
+      );
+    fireEvent.click(await screen.findByRole('button', { name: 'run-a' }));
+    expect(charted()).toEqual(['run-b']);
+    fireEvent.click(screen.getByRole('button', { name: 'run-b' })); // the last one shown
+    expect(charted()).toEqual(['run-b']);
+    fireEvent.click(screen.getByRole('button', { name: 'run-a' }));
+    expect(charted()).toEqual(['run-a', 'run-b']);
   });
 
   it('warns that charts no longer share a time axis once fitted to their own data', async () => {
