@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, Label, Stack, Switch, Tooltip } from '@patternfly/react-core';
+import { Content, Flex, Icon, Label, Stack, Switch, Tooltip } from '@patternfly/react-core';
 import { NotEqualIcon } from '@patternfly/react-icons';
 import { InnerScrollContainer, Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
@@ -18,20 +18,37 @@ const AIBOMCompareFieldsTable: FC<AIBOMCompareFieldsTableProps> = ({ items, runN
   // Off by default: the view flags differences rather than hiding rows. Rows
   // no run recorded are pure noise, though, so offer to drop them.
   const [hideUnrecorded, setHideUnrecorded] = useState(false);
+  // oc-aibom's `compare --changed`.
+  const [onlyDiffering, setOnlyDiffering] = useState(false);
   const rows = buildFieldRows(items).filter(
-    (row) => !hideUnrecorded || row.values.some((value) => value !== ''),
+    (row) =>
+      (!hideUnrecorded || row.values.some((value) => value !== '')) &&
+      (!onlyDiffering || row.differs),
   );
 
   return (
     <Stack hasGutter>
-      <Switch
-        id="aibom-compare-hide-unrecorded"
-        label={t('Hide fields no run recorded')}
-        isChecked={hideUnrecorded}
-        onChange={(_event, checked) => {
-          setHideUnrecorded(checked);
-        }}
-      />
+      <Flex>
+        <Switch
+          id="aibom-compare-only-differing"
+          label={t('Show only fields that differ')}
+          isChecked={onlyDiffering}
+          onChange={(_event, checked) => {
+            setOnlyDiffering(checked);
+          }}
+        />
+        <Switch
+          id="aibom-compare-hide-unrecorded"
+          label={t('Hide fields no run recorded')}
+          isChecked={hideUnrecorded}
+          onChange={(_event, checked) => {
+            setHideUnrecorded(checked);
+          }}
+        />
+      </Flex>
+      {onlyDiffering && rows.length === 0 && (
+        <Content component="p">{t('Every field is the same in all runs.')}</Content>
+      )}
       {/* Run headers don't wrap, so their labels (and the suffix telling re-runs of
           one job apart) are never cut off; with many runs the table scrolls sideways
           with the Field column pinned. */}
