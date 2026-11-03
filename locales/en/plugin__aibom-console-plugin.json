@@ -196,7 +196,7 @@
   "The telemetry for this selection is too large to download at once (over {{max}} rows). Select fewer AIBOMs.": "The telemetry for this selection is too large to download at once (over {{max}} rows). Select fewer AIBOMs.",
   "This telemetry file will have about {{rows}} rows and may be slow to open in a spreadsheet. Download anyway?": "This telemetry file will have about {{rows}} rows and may be slow to open in a spreadsheet. Download anyway?",
   "Threads per core": "Threads per core",
-  "Time axes show elapsed time since each run started, so runs from different times line up.": "Time axes show elapsed time since each run started, so runs from different times line up.",
+  "Time axes show elapsed time since each run started, so runs from different times line up. Click a run to hide or show its lines.": "Time axes show elapsed time since each run started, so runs from different times line up. Click a run to hide or show its lines.",
   "Time axes show elapsed time since the run started.": "Time axes show elapsed time since the run started.",
   "Topology": "Topology",
   "Torch build": "Torch build",
