@@ -4,16 +4,20 @@ import { DescriptionList } from '@patternfly/react-core';
 import type { AIBOMData } from '../../types/aibom';
 import { formatFlexNumber } from '../../utils/flexible';
 import {
+  formatDeepSpeed,
   formatDeterminismFlags,
   formatFp8,
+  formatFsdp,
   formatFsdpPrecision,
   formatLrScheduler,
+  formatParallelSizes,
   formatParamGroups,
   formatSeedHistory,
   formatSeeds,
   formatSettings,
   formatSettingValue,
   formatTf32,
+  formatTopology,
   withVia,
 } from '../../utils/trainingFields';
 import Field from './Field';
@@ -30,6 +34,7 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
   const scheduler = training.lr_scheduler;
   const determinism = training.determinism;
   const precision = training.precision;
+  const distributed = training.distributed;
   const paramGroups = formatParamGroups(optimizer?.param_groups);
   const params = formatSettings(optimizer?.params);
 
@@ -42,6 +47,14 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
         <Field label={t('Epochs')}>{formatFlexNumber(training.epochs)}</Field>
         <Field label={t('Random seed')}>{formatFlexNumber(training.random_seed)}</Field>
         <Field label={t('Parallelization')}>{training.parallelization_strategy}</Field>
+        <Field label={t('Parallelism')}>{distributed?.strategies?.join(' + ')}</Field>
+        <Field label={t('Topology')}>{distributed && formatTopology(distributed)}</Field>
+        <Field label={t('Parallel sizes')}>{distributed && formatParallelSizes(distributed)}</Field>
+        <Field label={t('Device mesh')}>{formatSettings(distributed?.device_mesh)}</Field>
+        <Field label="FSDP">{distributed?.fsdp && formatFsdp(distributed.fsdp)}</Field>
+        <Field label="DeepSpeed">
+          {distributed?.deepspeed && formatDeepSpeed(distributed.deepspeed)}
+        </Field>
         <Field label={t('Mixed precision')}>
           {training.mixed_precision &&
             withVia(training.mixed_precision, training.mixed_precision_declared_via)}

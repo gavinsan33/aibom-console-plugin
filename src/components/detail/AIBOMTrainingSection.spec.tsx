@@ -97,6 +97,58 @@ describe('AIBOMTrainingSection', () => {
     }
   });
 
+  it('shows the distributed topology', () => {
+    render(
+      <AIBOMTrainingSection
+        training={{
+          distributed: {
+            world_size: 8,
+            nodes: 2,
+            processes_per_node: 4,
+            world_declared_via: 'environment',
+            tensor_parallel_size: 2,
+            data_parallel_size: 4,
+            parallel_sizes_declared_via: 'device_mesh',
+            device_mesh: { tp: 2, dp_shard: 4 },
+            fsdp: {
+              version: 2,
+              reshard_after_forward: true,
+              cpu_offload: false,
+              declared_via: 'fsdp_module',
+            },
+            deepspeed: {
+              zero_stage: 3,
+              offload_optimizer: 'cpu',
+              declared_via: 'deepspeed_engine',
+            },
+            strategies: ['fsdp', 'tensor_parallel'],
+          },
+        }}
+      />,
+    );
+    for (const text of [
+      'fsdp + tensor_parallel',
+      '8 processes, 2 nodes, 4 per node (via: environment)',
+      'tensor 2, data 4 (via: device_mesh)',
+      'dp_shard=4, tp=2',
+      'FSDP2, reshard after forward true, CPU offload false (via: fsdp_module)',
+      'ZeRO-3, optimizer offload cpu (via: deepspeed_engine)',
+    ]) {
+      expect(screen.getByText(text)).toBeVisible();
+    }
+  });
+
+  it('says FSDP is enabled when no detail was recorded', () => {
+    render(
+      <AIBOMTrainingSection
+        training={{
+          distributed: { fsdp: { declared_via: 'accelerate_config' }, strategies: ['fsdp'] },
+        }}
+      />,
+    );
+    expect(screen.getByText('enabled (via: accelerate_config)')).toBeVisible();
+  });
+
   it('names no FP8 backend when accelerate reported none', () => {
     render(<AIBOMTrainingSection training={{ precision: { fp8: { backend: null } } }} />);
     expect(screen.getByText('unknown backend')).toBeVisible();
