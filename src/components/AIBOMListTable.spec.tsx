@@ -6,7 +6,12 @@ import AIBOMListTable from './AIBOMListTable';
 
 const renderWithRouter = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
-function item(name: string): AIBOMResource {
+type Model = NonNullable<NonNullable<AIBOMResource['spec']>['data']>['model'];
+
+function item(
+  name: string,
+  model: Model = { name: 'granite-3.0-8b', quantization: 'int4' },
+): AIBOMResource {
   return {
     metadata: { name, namespace: 'ns' },
     spec: {
@@ -14,7 +19,7 @@ function item(name: string): AIBOMResource {
       experimentIntent: 'training',
       collectedAt: '2026-01-01T00:00:00Z',
       data: {
-        model: { name: 'granite-3.0-8b', quantization: 'int4' },
+        model,
         environment: { gpu_type: 'A100' },
         resource_utilization: { metrics: { gpu_utilization: { avg: 42, unit: '%' } } },
       },
@@ -52,6 +57,25 @@ describe('AIBOMListTable', () => {
     );
     expect(screen.getByText('gpu-utilization')).toBeInTheDocument();
     expect(screen.getByText('42.00%')).toBeInTheDocument();
+  });
+
+  it('shows the quantization as Precision, else the dtype', () => {
+    const quantized = item('run-q', { name: 'm', quantization: 'awq', quantization_bits: 4 });
+    const plain = item('run-p', { name: 'm', dtype: 'bfloat16' });
+    renderWithRouter(
+      <AIBOMListTable
+        items={[item('run-a'), quantized, plain]}
+        sortKey="age"
+        ascending={false}
+        onSort={jest.fn()}
+        selected={new Set()}
+        onToggleSelect={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Precision')).toBeInTheDocument();
+    expect(screen.getByText('int4')).toBeInTheDocument(); // bits already in the name
+    expect(screen.getByText('awq 4-bit')).toBeInTheDocument();
+    expect(screen.getByText('bfloat16')).toBeInTheDocument();
   });
 
   it('calls onToggleSelect with the item key when its checkbox is clicked', () => {
