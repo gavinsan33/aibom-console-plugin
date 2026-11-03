@@ -10,6 +10,7 @@ import {
   formatFsdp,
   formatFsdpPrecision,
   formatLrScheduler,
+  formatParallelism,
   formatParallelSizes,
   formatParamGroups,
   formatSeedHistory,
@@ -46,14 +47,19 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
         <Field label={t('Batch size')}>{formatFlexNumber(training.batch_size)}</Field>
         <Field label={t('Epochs')}>{formatFlexNumber(training.epochs)}</Field>
         <Field label={t('Random seed')}>{formatFlexNumber(training.random_seed)}</Field>
-        <Field label={t('Parallelization')}>{training.parallelization_strategy}</Field>
-        <Field label={t('Parallelism')}>{distributed?.strategies?.join(' + ')}</Field>
-        <Field label={t('Topology')}>{distributed && formatTopology(distributed)}</Field>
-        <Field label={t('Parallel sizes')}>{distributed && formatParallelSizes(distributed)}</Field>
+        <Field label={t('Parallelism')}>{formatParallelism(training)}</Field>
+        <Field label={t('Topology')}>
+          {withVia(formatTopology(distributed), distributed?.world_declared_via)}
+        </Field>
+        <Field label={t('Parallel sizes')}>
+          {withVia(formatParallelSizes(distributed), distributed?.parallel_sizes_declared_via)}
+        </Field>
         <Field label={t('Device mesh')}>{formatSettings(distributed?.device_mesh)}</Field>
-        <Field label="FSDP">{distributed?.fsdp && formatFsdp(distributed.fsdp)}</Field>
+        <Field label="FSDP">
+          {withVia(formatFsdp(distributed?.fsdp), distributed?.fsdp?.declared_via)}
+        </Field>
         <Field label="DeepSpeed">
-          {distributed?.deepspeed && formatDeepSpeed(distributed.deepspeed)}
+          {withVia(formatDeepSpeed(distributed?.deepspeed), distributed?.deepspeed?.declared_via)}
         </Field>
         <Field label={t('Mixed precision')}>
           {training.mixed_precision &&

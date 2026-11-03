@@ -138,6 +138,24 @@ describe('AIBOMTrainingSection', () => {
     }
   });
 
+  it('shows one Parallelism field, falling back to parallelization_strategy', () => {
+    const { unmount } = render(
+      <AIBOMTrainingSection training={{ parallelization_strategy: 'data_parallel' }} />,
+    );
+    expect(screen.getByText('data_parallel')).toBeVisible();
+    expect(screen.queryByText('Parallelization')).toBeNull();
+    unmount();
+    render(
+      <AIBOMTrainingSection
+        training={{
+          parallelization_strategy: 'fsdp',
+          distributed: { strategies: ['fsdp', 'tensor_parallel'] },
+        }}
+      />,
+    );
+    expect(screen.getByText('fsdp + tensor_parallel')).toBeVisible();
+  });
+
   it('says FSDP is enabled when no detail was recorded', () => {
     render(
       <AIBOMTrainingSection

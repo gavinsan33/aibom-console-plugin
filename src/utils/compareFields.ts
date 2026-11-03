@@ -29,6 +29,15 @@ import {
   getTorchCudaVersion,
   hasDatasetDrift,
 } from './aibomFields';
+import {
+  formatDeepSpeed,
+  formatFsdp,
+  formatParallelism,
+  formatParallelSizes,
+  formatTopology,
+} from './trainingFields';
+
+const training = (a: AIBOMResource) => a.spec?.data?.training;
 
 export interface FieldRow {
   label: string;
@@ -58,6 +67,12 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
   { label: 'Dirty', getValue: (a) => String(getDirty(a)) },
   { label: 'Optimizer', getValue: getOptimizer },
   { label: 'LR Scheduler', getValue: getLrScheduler },
+  { label: 'Mixed Precision', getValue: (a) => training(a)?.mixed_precision ?? '' },
+  { label: 'Parallelism', getValue: (a) => formatParallelism(training(a)) },
+  { label: 'Topology', getValue: (a) => formatTopology(training(a)?.distributed) },
+  { label: 'Parallel Sizes', getValue: (a) => formatParallelSizes(training(a)?.distributed) },
+  { label: 'FSDP', getValue: (a) => formatFsdp(training(a)?.distributed?.fsdp) },
+  { label: 'DeepSpeed', getValue: (a) => formatDeepSpeed(training(a)?.distributed?.deepspeed) },
   { label: 'GPU Type', getValue: getGpuType },
   { label: 'GPU Count', getValue: (a) => String(getGpuCount(a)) },
   { label: 'CUDA Version', getValue: getCudaVersion },
@@ -69,9 +84,38 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
   { label: 'AIBOM Version', getValue: getAibomVersion },
 ];
 
+/**
+ * Each run's Libraries narrowed to the libraries whose version isn't the same
+ * in every run ("—" where a run didn't import it), plus how many others
+ * match, so a one-library change isn't a whole differing list. Runs that
+ * recorded no libraries stay empty and don't count. As oc-aibom's
+ * libraryDifferences.
+ */
+export function libraryDifferences(items: AIBOMResource[]): string[] {
+  const libraries: Record<string, string>[] = items.map(
+    (a) => a.spec?.data?.environment?.libraries ?? {},
+  );
+  const recorded = libraries.filter((libs) => Object.keys(libs).length > 0);
+  const names = Array.from(new Set(recorded.flatMap((libs) => Object.keys(libs))));
+  const differing = names
+    .filter((name) => new Set(recorded.map((libs) => libs[name] ?? '—')).size > 1)
+    .sort();
+  const same = names.length - differing.length;
+  return libraries.map((libs) => {
+    if (Object.keys(libs).length === 0) return '';
+    const list = differing.map((name) => `${name} ${libs[name] ?? '—'}`).join(', ');
+    return same > 0 ? `${list} (+${String(same)} identical)` : list;
+  });
+}
+
 export function buildFieldRows(items: AIBOMResource[]): FieldRow[] {
   return FIELD_ACCESSORS.map(({ label, getValue }) => {
     const values = items.map(getValue);
-    return { label, values, differs: new Set(values).size > 1 };
+    const differs = new Set(values).size > 1;
+    return {
+      label,
+      values: label === 'Libraries' && differs ? libraryDifferences(items) : values,
+      differs,
+    };
   });
 }

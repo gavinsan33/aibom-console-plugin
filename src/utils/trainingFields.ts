@@ -108,62 +108,73 @@ export const formatFsdpPrecision = (f: NonNullable<Precision['fsdp_mixed_precisi
 
 type Distributed = NonNullable<Training['distributed']>;
 
+// Without `(via: ...)`: the Training section adds it, the compare page
+// doesn't, so runs differing only in the source don't read as different.
+// Same strings as oc-aibom's internal/aibom/distributed.go.
+
+const plural = (n: number, one: string, many: string): string =>
+  n === 1 ? `1 ${one}` : `${String(n)} ${many}`;
+const orEnabled = (parts: (string | undefined)[]): string =>
+  parts.filter(Boolean).join(', ') || 'enabled';
+
+/**
+ * Every kind of parallelism the run used, e.g. `"fsdp + tensor_parallel"`,
+ * from distributed.strategies; an AIBOM from before that field falls back to
+ * parallelization_strategy.
+ */
+export const formatParallelism = (t?: Training | null): string =>
+  t?.distributed?.strategies?.length
+    ? t.distributed.strategies.join(' + ')
+    : (t?.parallelization_strategy ?? '');
+
 /** `"8 processes, 2 nodes, 4 per node"`. */
-export const formatTopology = (d: Distributed): string =>
-  withVia(
-    [
-      d.world_size != null ? `${String(d.world_size)} processes` : undefined,
-      d.nodes != null ? `${String(d.nodes)} nodes` : undefined,
-      d.processes_per_node != null ? `${String(d.processes_per_node)} per node` : undefined,
-    ]
-      .filter(Boolean)
-      .join(', '),
-    d.world_declared_via,
-  );
+export const formatTopology = (d?: Distributed | null): string =>
+  d
+    ? [
+        d.world_size != null ? plural(d.world_size, 'process', 'processes') : undefined,
+        d.nodes != null ? plural(d.nodes, 'node', 'nodes') : undefined,
+        d.processes_per_node != null ? `${String(d.processes_per_node)} per node` : undefined,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : '';
 
-/** `"tensor 2, data 4 (via: device_mesh)"`. */
-export const formatParallelSizes = (d: Distributed): string =>
-  withVia(
-    (
-      [
-        ['tensor', d.tensor_parallel_size],
-        ['pipeline', d.pipeline_parallel_size],
-        ['context', d.context_parallel_size],
-        ['expert', d.expert_parallel_size],
-        ['data', d.data_parallel_size],
-      ] as const
-    )
-      .filter(([, v]) => v != null)
-      .map(([name, v]) => `${name} ${String(v)}`)
-      .join(', '),
-    d.parallel_sizes_declared_via,
-  );
+/** `"tensor 2, data 4"`. */
+export const formatParallelSizes = (d?: Distributed | null): string =>
+  d
+    ? (
+        [
+          ['tensor', d.tensor_parallel_size],
+          ['pipeline', d.pipeline_parallel_size],
+          ['context', d.context_parallel_size],
+          ['expert', d.expert_parallel_size],
+          ['data', d.data_parallel_size],
+        ] as const
+      )
+        .filter(([, v]) => v != null)
+        .map(([name, v]) => `${name} ${String(v)}`)
+        .join(', ')
+    : '';
 
-/** `"FSDP2, reshard after forward true, CPU offload false (via: fsdp_module)"`. */
-export const formatFsdp = (f: NonNullable<Distributed['fsdp']>): string =>
-  withVia(
-    [
-      f.version != null ? `FSDP${String(f.version)}` : undefined,
-      f.sharding_strategy,
-      f.reshard_after_forward != null
-        ? `reshard after forward ${String(f.reshard_after_forward)}`
-        : undefined,
-      f.cpu_offload != null ? `CPU offload ${String(f.cpu_offload)}` : undefined,
-    ]
-      .filter(Boolean)
-      .join(', ') || 'enabled',
-    f.declared_via,
-  );
+/** `"FSDP2, reshard after forward true, CPU offload false"`, or `"enabled"`. */
+export const formatFsdp = (f?: Distributed['fsdp']): string =>
+  f
+    ? orEnabled([
+        f.version != null ? `FSDP${String(f.version)}` : undefined,
+        f.sharding_strategy,
+        f.reshard_after_forward != null
+          ? `reshard after forward ${String(f.reshard_after_forward)}`
+          : undefined,
+        f.cpu_offload != null ? `CPU offload ${String(f.cpu_offload)}` : undefined,
+      ])
+    : '';
 
-/** `"ZeRO-3, optimizer offload cpu (via: deepspeed_engine)"`. */
-export const formatDeepSpeed = (z: NonNullable<Distributed['deepspeed']>): string =>
-  withVia(
-    [
-      z.zero_stage != null ? `ZeRO-${String(z.zero_stage)}` : undefined,
-      z.offload_optimizer ? `optimizer offload ${z.offload_optimizer}` : undefined,
-      z.offload_param ? `param offload ${z.offload_param}` : undefined,
-    ]
-      .filter(Boolean)
-      .join(', ') || 'enabled',
-    z.declared_via,
-  );
+/** `"ZeRO-3, optimizer offload cpu"`, or `"enabled"`. */
+export const formatDeepSpeed = (z?: Distributed['deepspeed']): string =>
+  z
+    ? orEnabled([
+        z.zero_stage != null ? `ZeRO-${String(z.zero_stage)}` : undefined,
+        z.offload_optimizer ? `optimizer offload ${z.offload_optimizer}` : undefined,
+        z.offload_param ? `param offload ${z.offload_param}` : undefined,
+      ])
+    : '';
