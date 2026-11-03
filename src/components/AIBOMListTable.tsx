@@ -12,7 +12,7 @@ import {
   getMetricAvg,
   getMetricUnit,
   getModelName,
-  getQuantization,
+  getWeightPrecision,
   hasMetric,
 } from '../utils/aibomFields';
 import { SORTABLE_METRICS } from '../types/aibom';
@@ -81,7 +81,7 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
           {showNamespace && <Th>{t('Namespace')}</Th>}
           <Th>{t('Model')}</Th>
           <Th modifier="nowrap">{t('Intent')}</Th>
-          <Th modifier="nowrap">{t('Quantization')}</Th>
+          <Th modifier="nowrap">{t('Precision')}</Th>
           <Th>{t('GPU type')}</Th>
           <Th {...sortParams('age', collectedAtIndex)} modifier="nowrap">
             {t('Collected at')}
@@ -116,8 +116,8 @@ const AIBOMListTable: FC<AIBOMListTableProps> = ({
             <Td dataLabel={t('Intent')} modifier="nowrap">
               {getExperimentIntent(item) || '—'}
             </Td>
-            <Td dataLabel={t('Quantization')} modifier="nowrap">
-              {getQuantization(item) || '—'}
+            <Td dataLabel={t('Precision')} modifier="nowrap">
+              {getWeightPrecision(item) || '—'}
             </Td>
             <Td dataLabel={t('GPU type')}>{getGpuType(item) || '—'}</Td>
             <Td dataLabel={t('Collected at')} modifier="nowrap">

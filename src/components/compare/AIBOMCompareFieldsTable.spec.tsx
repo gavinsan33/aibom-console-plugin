@@ -23,4 +23,18 @@ describe('AIBOMCompareFieldsTable', () => {
     expect(screen.queryByText('Model Version')).not.toBeInTheDocument();
     expect(screen.getByText('Model Name')).toBeInTheDocument();
   });
+
+  it('shows only differing fields when asked', () => {
+    renderTable();
+    fireEvent.click(screen.getByLabelText('Show only fields that differ'));
+    expect(screen.getByText('Model Name')).toBeInTheDocument();
+    expect(screen.queryByText('Job')).not.toBeInTheDocument();
+    expect(screen.queryByText('Model Version')).not.toBeInTheDocument();
+  });
+
+  it('says so when no field differs', () => {
+    render(<AIBOMCompareFieldsTable items={[run('m1'), run('m1')]} runNames={['a', 'b']} />);
+    fireEvent.click(screen.getByLabelText('Show only fields that differ'));
+    expect(screen.getByText('Every field is the same in all runs.')).toBeInTheDocument();
+  });
 });

@@ -21,6 +21,19 @@ export const getCollectedAt = (a: AIBOMResource): string => a.spec?.collectedAt 
 export const getModelVersion = (a: AIBOMResource): string => a.spec?.data?.model?.version ?? '';
 export const getModelRevision = (a: AIBOMResource): string => a.spec?.data?.model?.revision ?? '';
 export const getDtype = (a: AIBOMResource): string => a.spec?.data?.model?.dtype ?? '';
+/**
+ * How the weights were stored: the quantization when there is one
+ * (`"awq 4-bit"`; the bits are left off a name that already has them, like
+ * `"int4"`), else the dtype (`"bfloat16"`).
+ */
+export const getWeightPrecision = (a: AIBOMResource): string => {
+  const quantization = getQuantization(a);
+  if (!quantization) return getDtype(a);
+  const bits = toFlexNumber(a.spec?.data?.model?.quantization_bits);
+  return bits != null && !/\d/.test(quantization)
+    ? `${quantization} ${String(bits)}-bit`
+    : quantization;
+};
 export const getDeclaredDatasetName = (a: AIBOMResource): string =>
   a.spec?.data?.dataset?.declared?.name ?? '';
 export const getDeclaredDatasetVersion = (a: AIBOMResource): string =>
