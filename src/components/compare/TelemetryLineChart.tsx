@@ -122,19 +122,7 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
           tickValues={ticks}
           tickFormat={(_y: number, index: number) => tickLabels[index]}
         />
-        {lines.map((line, i) => (
-          <ChartLine
-            key={`${line.name}-${String(i)}`}
-            data={line.points.map((p) => ({ x: p.x, y: p.y, name: line.name }))}
-            style={{
-              data: {
-                stroke: runChartColor(line.colorIndex),
-                strokeWidth: 1.5,
-                strokeDasharray: line.dash,
-              },
-            }}
-          />
-        ))}
+        {/* Drawn first so a run that hits its limit (e.g. OOMKilled) stays visible on top. */}
         {limit !== undefined &&
           limit > 0 &&
           (() => {
@@ -156,11 +144,25 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
                   data: {
                     stroke: LIMIT_COLOR,
                     strokeWidth: 1.5,
+                    strokeDasharray: '6,4',
                   },
                 }}
               />
             );
           })()}
+        {lines.map((line, i) => (
+          <ChartLine
+            key={`${line.name}-${String(i)}`}
+            data={line.points.map((p) => ({ x: p.x, y: p.y, name: line.name }))}
+            style={{
+              data: {
+                stroke: runChartColor(line.colorIndex),
+                strokeWidth: 1.5,
+                strokeDasharray: line.dash,
+              },
+            }}
+          />
+        ))}
       </Chart>
     </div>
   );
