@@ -29,6 +29,15 @@ import {
   getTorchCudaVersion,
   hasDatasetDrift,
 } from './aibomFields';
+import {
+  formatDeepSpeed,
+  formatFsdp,
+  formatParallelism,
+  formatParallelSizes,
+  formatTopology,
+} from './trainingFields';
+
+const training = (a: AIBOMResource) => a.spec?.data?.training;
 
 export interface FieldRow {
   label: string;
@@ -58,6 +67,13 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
   { label: 'Dirty', getValue: (a) => String(getDirty(a)) },
   { label: 'Optimizer', getValue: getOptimizer },
   { label: 'LR Scheduler', getValue: getLrScheduler },
+  { label: 'Mixed Precision', getValue: (a) => training(a)?.mixed_precision ?? '' },
+  { label: 'Parallelization', getValue: (a) => training(a)?.parallelization_strategy ?? '' },
+  { label: 'Parallelism', getValue: (a) => formatParallelism(training(a)?.distributed) },
+  { label: 'Topology', getValue: (a) => formatTopology(training(a)?.distributed) },
+  { label: 'Parallel Sizes', getValue: (a) => formatParallelSizes(training(a)?.distributed) },
+  { label: 'FSDP', getValue: (a) => formatFsdp(training(a)?.distributed?.fsdp) },
+  { label: 'DeepSpeed', getValue: (a) => formatDeepSpeed(training(a)?.distributed?.deepspeed) },
   { label: 'GPU Type', getValue: getGpuType },
   { label: 'GPU Count', getValue: (a) => String(getGpuCount(a)) },
   { label: 'CUDA Version', getValue: getCudaVersion },
