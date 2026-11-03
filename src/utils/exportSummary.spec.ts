@@ -35,6 +35,8 @@ describe('buildSummaryCsv', () => {
     expect(header.slice(0, 4)).toEqual(['aibom', 'namespace', 'name', 'collected_at']);
     expect(header).toContain('Model Name');
     expect(header).toContain('CPU Usage (avg)');
+    expect(header).toContain('Runtime (seconds)');
+    expect(header).not.toContain('Runtime (avg)');
     expect(header).toContain('TTFT (avg)');
     expect(lines[1].startsWith('ns/a,ns,a,2026-01-01T00:00:00Z')).toBe(true);
   });

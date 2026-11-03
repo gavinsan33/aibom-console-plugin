@@ -47,7 +47,8 @@ fields, delta/%-change) and `compare` (2+, fixed 4-field summary, averages
 only, no delta) commands into one N-scalable view: `src/utils/compareFields.ts`
 always shows the fuller `diff` field list for all N items (flagging
 divergent rows rather than hiding agreement), `src/utils/comparePerformance.ts`
-shows Delta/%-change only at exactly 2. If
+shows Delta/%-change only at exactly 2. Its hardware rows lead with a Runtime pseudo-metric
+(`execution_metadata.duration_seconds`, shown as a duration; `oc-aibom`'s `CompareRuntime`). If
 you're tempted to add a `Trend()`-word-based badge (`"up"`/`"down"`/`"flat"`/
 `"volatile"`) — don't; it's defined in `oc-aibom`'s Go types but never
 actually rendered by any CLI command, so there's no reference format to

@@ -1,7 +1,7 @@
 import type { AIBOMResource } from '../types/aibom';
 import { getCollectedAt } from './aibomFields';
 import { buildFieldRows } from './compareFields';
-import { buildPerformanceRows, INFERENCE } from './comparePerformance';
+import { buildPerformanceRows, INFERENCE, RUNTIME_KEY } from './comparePerformance';
 import { toCsv } from './csv';
 
 export const aibomKey = (item: AIBOMResource): string =>
@@ -23,7 +23,12 @@ export function buildSummaryCsv(items: AIBOMResource[]): string {
     'name',
     'collected_at',
     ...fields.map((f) => f.label),
-    ...performance.flatMap((row) => [`${row.label} (avg)`, `${row.label} (unit)`]),
+    // Runtime is a single duration, not an average with a unit.
+    ...performance.flatMap((row) =>
+      row.metricKey === RUNTIME_KEY
+        ? [`${row.label} (seconds)`]
+        : [`${row.label} (avg)`, `${row.label} (unit)`],
+    ),
   ];
 
   const rows = items.map((item, i) => [
@@ -34,6 +39,7 @@ export function buildSummaryCsv(items: AIBOMResource[]): string {
     ...fields.map((f) => f.values[i]),
     ...performance.flatMap((row) => {
       const cell = row.values[i];
+      if (row.metricKey === RUNTIME_KEY) return [cell.unavailable ? '' : cell.avg];
       return cell.unavailable ? ['', ''] : [cell.avg, cell.unit];
     }),
   ]);

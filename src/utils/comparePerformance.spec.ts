@@ -68,6 +68,25 @@ describe('buildPerformanceRows', () => {
     expect(gpu?.delta).toBeUndefined();
   });
 
+  it('leads the hardware rows with runtime, kept when telemetry failed and blank when unrecorded', () => {
+    const timed = (seconds: number | undefined, note?: string): AIBOMResource => {
+      const a = withMetric(50, note);
+      if (a.spec?.data && seconds !== undefined) {
+        a.spec.data.execution_metadata = { duration_seconds: seconds };
+      }
+      return a;
+    };
+    const [runtime] = buildPerformanceRows([timed(600), timed(900, 'telemetry unavailable')]);
+    expect(runtime.metricKey).toBe('runtime');
+    expect(runtime.values.map((v) => v.avg)).toEqual([600, 900]);
+    expect(runtime.delta).toBe(300);
+    expect(runtime.pctChange).toBeCloseTo(50);
+    const [missing] = buildPerformanceRows([timed(600), timed(undefined)]);
+    expect(missing.values[1].unavailable).toBe(true);
+    expect(missing.delta).toBeUndefined();
+    expect(buildPerformanceRows([timed(600)], INFERENCE)[0].metricKey).not.toBe('runtime');
+  });
+
   it('flags an inference metric unavailable per metric, with no delta against it', () => {
     // TGI exports no TTFT: it must blank, not diff as -100% against vLLM's.
     const vllm = withInference({ time_to_first_token_seconds: 0.12, generation_throughput: 100 });
