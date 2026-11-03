@@ -14,6 +14,7 @@ import {
   hasInferenceMetric,
   hasMetric,
 } from './aibomFields';
+import { toFlexNumber } from './flexible';
 
 export interface PerformanceCell {
   avg: number;
@@ -39,14 +40,28 @@ export interface MetricSet {
   unavailable: (a: AIBOMResource, key: string) => boolean;
 }
 
+/**
+ * Pseudo-metric leading the hardware rows: the run's wall-clock duration
+ * (`execution_metadata.duration_seconds`), so how long each run took sits
+ * next to what it used. Mirrors `oc-aibom`'s `CompareRuntime`.
+ */
+export const RUNTIME_KEY = 'runtime';
+
+const runtimeSeconds = (a: AIBOMResource): number | undefined =>
+  toFlexNumber(a.spec?.data?.execution_metadata?.duration_seconds);
+
 const HARDWARE: MetricSet = {
-  order: HARDWARE_METRIC_ORDER,
-  labels: HARDWARE_METRIC_LABELS,
-  getAvg: getMetricAvg,
-  getUnit: getMetricUnit,
+  order: [RUNTIME_KEY, ...HARDWARE_METRIC_ORDER],
+  labels: { [RUNTIME_KEY]: 'Runtime', ...HARDWARE_METRIC_LABELS },
+  getAvg: (a, key) => (key === RUNTIME_KEY ? (runtimeSeconds(a) ?? 0) : getMetricAvg(a, key)),
+  getUnit: (a, key) => (key === RUNTIME_KEY ? 's' : getMetricUnit(a, key)),
   // A note means collection failed outright; a missing key means this metric
   // wasn't collected. Either way the avg is a placeholder 0, not a reading.
-  unavailable: (a, key) => getResourceUtilizationNote(a) !== '' || !hasMetric(a, key),
+  // Runtime doesn't come from resource_utilization, so a note doesn't blank it.
+  unavailable: (a, key) =>
+    key === RUNTIME_KEY
+      ? runtimeSeconds(a) === undefined
+      : getResourceUtilizationNote(a) !== '' || !hasMetric(a, key),
 };
 
 export const INFERENCE: MetricSet = {

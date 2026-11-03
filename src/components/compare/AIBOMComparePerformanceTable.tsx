@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Label } from '@patternfly/react-core';
 import { InnerScrollContainer, Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import type { AIBOMResource } from '../../types/aibom';
-import { buildPerformanceRows } from '../../utils/comparePerformance';
+import { buildPerformanceRows, RUNTIME_KEY } from '../../utils/comparePerformance';
 import type { MetricSet, PerformanceCell } from '../../utils/comparePerformance';
+import { formatDuration } from '../../utils/executionMetadata';
 import { withUnit } from '../../utils/formatMetricValue';
 import { runColor } from '../../utils/runColors';
 
@@ -21,8 +22,18 @@ const signColor = (value: number): 'green' | 'red' | undefined => {
   return undefined;
 };
 
-const formatCell = (cell: PerformanceCell): string =>
-  cell.unavailable ? '—' : withUnit(cell.avg.toFixed(2), cell.unit);
+const formatCell = (cell: PerformanceCell, metricKey: string): string => {
+  if (cell.unavailable) return '—';
+  if (metricKey === RUNTIME_KEY) return formatDuration(cell.avg) ?? '—';
+  return withUnit(cell.avg.toFixed(2), cell.unit);
+};
+
+/** A delta, signed; runtime's as a duration ("+2m0s") rather than seconds. */
+const formatDelta = (delta: number, metricKey: string): string => {
+  const sign = delta > 0 ? '+' : delta < 0 ? '-' : '';
+  if (metricKey === RUNTIME_KEY) return `${sign}${formatDuration(Math.abs(delta)) ?? ''}`;
+  return delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+};
 
 const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
   items,
@@ -65,7 +76,7 @@ const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
               </Td>
               {row.values.map((cell, index) => (
                 <Td key={index} dataLabel={runNames[index]}>
-                  {formatCell(cell)}
+                  {formatCell(cell, row.metricKey)}
                 </Td>
               ))}
               {showDelta && (
@@ -75,7 +86,7 @@ const AIBOMComparePerformanceTable: FC<AIBOMComparePerformanceTableProps> = ({
                       '—'
                     ) : (
                       <Label color={signColor(row.delta)} isCompact>
-                        {row.delta > 0 ? `+${row.delta.toFixed(2)}` : row.delta.toFixed(2)}
+                        {formatDelta(row.delta, row.metricKey)}
                       </Label>
                     )}
                   </Td>
