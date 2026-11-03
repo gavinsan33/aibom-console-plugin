@@ -8,7 +8,7 @@ import {
   ChartLine,
   ChartVoronoiContainer,
 } from '@patternfly/react-charts/victory';
-import type { ChartLine as ChartLineModel } from '../../utils/compareLines';
+import type { ChartLimit, ChartLine as ChartLineModel } from '../../utils/compareLines';
 import { formatDuration } from '../../utils/executionMetadata';
 import type { MetricScale } from '../../utils/formatMetricValue';
 import { formatScaled, metricScale, yAxisTicks } from '../../utils/formatMetricValue';
@@ -22,8 +22,8 @@ interface TelemetryLineChartProps {
   metricKey?: string;
   /** Fixes the x-axis to `[0, xMax]` elapsed seconds; auto-fits to this chart's own data when omitted. */
   xMax?: number;
-  /** Hardware metric limit to show as a horizontal red line. */
-  limit?: number;
+  /** Hardware metric limits, each drawn as a horizontal red line. */
+  limits?: ChartLimit[];
 }
 
 const PLOT_HEIGHT = 220;
@@ -46,6 +46,10 @@ const MIN_LEFT_PADDING = 48;
 const BOTTOM_PADDING = 50;
 /** Status-danger token rather than a fixed red, so the limit line follows dark mode. */
 const LIMIT_COLOR = 'var(--pf-t--global--color--status--danger--default)';
+/** A limit's label sits this far below its line (labels above get clipped at the top of the plot). */
+const LIMIT_LABEL_DY = 24;
+/** Minimum vertical gap between two limits' labels, so close limits don't print over each other. */
+const LIMIT_LABEL_GAP = 16;
 
 /** Tracks the container's width so the (fixed-size) Victory chart fills its card. */
 function useContainerWidth(): [React.RefObject<HTMLDivElement>, number] {
@@ -65,6 +69,21 @@ function useContainerWidth(): [React.RefObject<HTMLDivElement>, number] {
   return [ref, width];
 }
 
+/**
+ * Each limit's label offset below its line. Limits come highest first; when a
+ * line sits too close under the previous one, its label is pushed further down
+ * so the two don't overlap.
+ */
+function limitLabelOffsets(limits: ChartLimit[], yMax: number) {
+  let previousLabelY = -Infinity;
+  return limits.map((limit) => {
+    const lineY = yMax > 0 ? (1 - limit.value / yMax) * PLOT_HEIGHT : 0;
+    const labelY = Math.max(lineY + LIMIT_LABEL_DY, previousLabelY + LIMIT_LABEL_GAP);
+    previousLabelY = labelY;
+    return { limit, dy: labelY - lineY };
+  });
+}
+
 const tooltipLabel =
   (scale: MetricScale) =>
   ({ datum }: { datum: { x: number; y: number; name: string } }): string =>
@@ -81,12 +100,13 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
   unit,
   metricKey,
   xMax,
-  limit,
+  limits = [],
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const [ref, width] = useContainerWidth();
   const maxValue = Math.max(
-    limit !== undefined && limit > 0 ? limit : 0,
+    0,
+    ...limits.map((limit) => limit.value),
     ...lines.flatMap((line) => line.points.map((p) => p.y)),
   );
   const scale = metricScale(maxValue, unit, metricKey);
@@ -123,33 +143,48 @@ const TelemetryLineChart: FC<TelemetryLineChartProps> = ({
           tickFormat={(_y: number, index: number) => tickLabels[index]}
         />
         {/* Drawn first so a run that hits its limit (e.g. OOMKilled) stays visible on top. */}
-        {limit !== undefined &&
-          limit > 0 &&
-          (() => {
-            const maxX = xMax ?? Math.max(0, ...lines.flatMap((l) => l.points.map((p) => p.x)));
-            return (
-              <ChartLine
-                data={[
-                  { x: 0, y: limit, name: t('Limit') },
-                  { x: maxX, y: limit, name: t('Limit') },
-                ]}
-                // Named on the line itself, since there is no legend.
-                labels={({ datum }: { datum: { x: number } }) => (datum.x === 0 ? t('Limit') : '')}
-                // Below the line: the limit is often the top of the axis, and the
-                // chart clips labels drawn above its plot area.
-                labelComponent={
-                  <ChartLabel dx={6} dy={24} textAnchor="start" style={{ fill: LIMIT_COLOR }} />
-                }
-                style={{
-                  data: {
-                    stroke: LIMIT_COLOR,
-                    strokeWidth: 1.5,
-                    strokeDasharray: '6,4',
-                  },
-                }}
-              />
-            );
-          })()}
+        {limitLabelOffsets(limits, ticks[ticks.length - 1]).map(({ limit, dy }) => {
+          const maxX = xMax ?? Math.max(0, ...lines.flatMap((l) => l.points.map((p) => p.x)));
+          const runs = limit.runs ?? [];
+          const name =
+            runs.length > 0
+              ? t('Limit: {{runs}}', { runs: runs.map((run) => run.name).join(', ') })
+              : t('Limit');
+          // "Limit" in red, then a swatch per run in its color, matching the run
+          // labels above the charts. Names are too long for the plot; the
+          // tooltip carries them.
+          const text = [t('Limit'), ...runs.map(() => '\u25A0')];
+          const styles = [
+            { fill: LIMIT_COLOR },
+            ...runs.map((run) => ({ fill: runChartColor(run.colorIndex) })),
+          ];
+          return (
+            <ChartLine
+              key={`limit-${String(limit.value)}`}
+              data={[
+                { x: 0, y: limit.value, name },
+                { x: maxX, y: limit.value, name },
+              ]}
+              // Named on the line itself, since there is no legend.
+              // A string[] label renders `inline` with one style per segment; Victory's
+              // types only admit a string, hence the cast.
+              labels={
+                (({ datum }: { datum: { x: number } }) =>
+                  datum.x === 0 ? text : '') as unknown as () => string
+              }
+              labelComponent={
+                <ChartLabel dx={6} dy={dy} textAnchor="start" inline style={styles} />
+              }
+              style={{
+                data: {
+                  stroke: LIMIT_COLOR,
+                  strokeWidth: 1.5,
+                  strokeDasharray: '6,4',
+                },
+              }}
+            />
+          );
+        })}
         {lines.map((line, i) => (
           <ChartLine
             key={`${line.name}-${String(i)}`}

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Content } from '@patternfly/react-core';
 import type { StoredMetric } from '../../types/telemetrySeries';
+import type { ChartLimit } from '../../utils/compareLines';
 import { linesFromStored, sharedElapsedMax } from '../../utils/compareLines';
 import TelemetryLineChart from './TelemetryLineChart';
 
@@ -28,8 +29,8 @@ interface TelemetryCompareChartProps {
   expanded: boolean;
   /** Zoom to this chart's own data instead of the shared x range. */
   fitToData?: boolean;
-  /** Hardware metric limit to show as a horizontal red line. */
-  limit?: number;
+  /** Hardware metric limits, each drawn as a horizontal red line. */
+  limits?: ChartLimit[];
 }
 
 /**
@@ -46,7 +47,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
   metricKey,
   expanded,
   fitToData = false,
-  limit,
+  limits,
 }) => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
   const lines = useMemo(
@@ -71,7 +72,7 @@ const TelemetryCompareChart: FC<TelemetryCompareChartProps> = ({
       unit={unit}
       metricKey={metricKey}
       xMax={xMax}
-      limit={limit}
+      limits={limits}
     />
   );
 };

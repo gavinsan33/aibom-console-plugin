@@ -101,6 +101,7 @@
   "Learning rate": "Learning rate",
   "Libraries": "Libraries",
   "Limit": "Limit",
+  "Limit: {{runs}}": "Limit: {{runs}}",
   "Loading AIBOM": "Loading AIBOM",
   "Loading AIBOMs": "Loading AIBOMs",
   "Loading telemetry": "Loading telemetry",
