@@ -135,7 +135,7 @@ describe('buildFieldRows parallelism and precision rows', () => {
     const rows = buildFieldRows([fsdp, deepspeed, { spec: { data: {} } }]);
     const row = (label: string) => rows.find((r) => r.label === label);
     expect(row('Mixed Precision')?.values).toEqual(['bf16', 'bf16', '']);
-    expect(row('Parallelization')?.values).toEqual(['fsdp', 'deepspeed', '']);
+    expect(row('Parallelization')).toBeUndefined();
     expect(row('Parallelism')?.values).toEqual(['fsdp', 'deepspeed', '']);
     expect(row('Topology')?.values).toEqual([
       '3 processes, 1 node, 3 per node',

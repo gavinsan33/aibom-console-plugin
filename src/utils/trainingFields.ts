@@ -117,9 +117,15 @@ const plural = (n: number, one: string, many: string): string =>
 const orEnabled = (parts: (string | undefined)[]): string =>
   parts.filter(Boolean).join(', ') || 'enabled';
 
-/** `"fsdp + tensor_parallel"`. */
-export const formatParallelism = (d?: Distributed | null): string =>
-  d?.strategies?.join(' + ') ?? '';
+/**
+ * Every kind of parallelism the run used, e.g. `"fsdp + tensor_parallel"`,
+ * from distributed.strategies; an AIBOM from before that field falls back to
+ * parallelization_strategy.
+ */
+export const formatParallelism = (t?: Training | null): string =>
+  t?.distributed?.strategies?.length
+    ? t.distributed.strategies.join(' + ')
+    : (t?.parallelization_strategy ?? '');
 
 /** `"8 processes, 2 nodes, 4 per node"`. */
 export const formatTopology = (d?: Distributed | null): string =>

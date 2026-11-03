@@ -47,8 +47,7 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
         <Field label={t('Batch size')}>{formatFlexNumber(training.batch_size)}</Field>
         <Field label={t('Epochs')}>{formatFlexNumber(training.epochs)}</Field>
         <Field label={t('Random seed')}>{formatFlexNumber(training.random_seed)}</Field>
-        <Field label={t('Parallelization')}>{training.parallelization_strategy}</Field>
-        <Field label={t('Parallelism')}>{formatParallelism(distributed)}</Field>
+        <Field label={t('Parallelism')}>{formatParallelism(training)}</Field>
         <Field label={t('Topology')}>
           {withVia(formatTopology(distributed), distributed?.world_declared_via)}
         </Field>
