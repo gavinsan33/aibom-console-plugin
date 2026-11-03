@@ -177,9 +177,9 @@ describe('buildFieldRows Libraries row', () => {
       run({ ...same, peft: '0.20.0' }),
     ]).find((r) => r.label === 'Libraries');
     expect(row?.values).toEqual([
-      'deepspeed —, peft — (+2 identical)',
+      'deepspeed not imported, peft not imported (+2 identical)',
       'deepspeed 0.19.9, peft 0.21.2 (+2 identical)',
-      'deepspeed —, peft 0.20.0 (+2 identical)',
+      'deepspeed not imported, peft 0.20.0 (+2 identical)',
     ]);
   });
 });

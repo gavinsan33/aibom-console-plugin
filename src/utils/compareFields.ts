@@ -86,7 +86,7 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
 
 /**
  * Each run's Libraries narrowed to the libraries whose version isn't the same
- * in every run ("—" where a run didn't import it), plus how many others
+ * in every run ("not imported" where a run didn't import it), plus how many others
  * match, so a one-library change isn't a whole differing list. Runs that
  * recorded no libraries stay empty and don't count. As oc-aibom's
  * libraryDifferences.
@@ -98,12 +98,12 @@ export function libraryDifferences(items: AIBOMResource[]): string[] {
   const recorded = libraries.filter((libs) => Object.keys(libs).length > 0);
   const names = Array.from(new Set(recorded.flatMap((libs) => Object.keys(libs))));
   const differing = names
-    .filter((name) => new Set(recorded.map((libs) => libs[name] ?? '—')).size > 1)
+    .filter((name) => new Set(recorded.map((libs) => libs[name] ?? 'not imported')).size > 1)
     .sort();
   const same = names.length - differing.length;
   return libraries.map((libs) => {
     if (Object.keys(libs).length === 0) return '';
-    const list = differing.map((name) => `${name} ${libs[name] ?? '—'}`).join(', ');
+    const list = differing.map((name) => `${name} ${libs[name] ?? 'not imported'}`).join(', ');
     return same > 0 ? `${list} (+${String(same)} identical)` : list;
   });
 }
