@@ -70,3 +70,32 @@ export function sharedElapsedMax(
   );
   return spans.length > 0 ? Math.max(...spans) : undefined;
 }
+
+/** A limit line. `runs` names whose limit it is; absent when every charted run shares it. */
+export interface ChartLimit {
+  value: number;
+  runs?: { name: string; colorIndex: number }[];
+}
+
+/**
+ * One limit line per distinct value, highest first. Runs with the same limit
+ * share a line; a run without one is left out. Only when every run has the
+ * same limit is it a single unnamed "Limit" -- otherwise naming the runs keeps
+ * one run's limit from reading as everyone's.
+ */
+export function groupLimits(
+  runs: { name: string; colorIndex: number; limit?: number }[],
+): ChartLimit[] {
+  const limited = runs.filter((run) => (run.limit ?? 0) > 0);
+  const values = limited
+    .map((run) => run.limit ?? 0)
+    .filter((value, i, all) => all.indexOf(value) === i)
+    .sort((a, b) => b - a);
+  if (values.length === 1 && limited.length === runs.length) return [{ value: values[0] }];
+  return values.map((value) => ({
+    value,
+    runs: limited
+      .filter((run) => run.limit === value)
+      .map(({ name, colorIndex }) => ({ name, colorIndex })),
+  }));
+}

@@ -1,5 +1,5 @@
 import type { StoredMetric } from '../types/telemetrySeries';
-import { linesFromStored, sharedElapsedMax } from './compareLines';
+import { groupLimits, linesFromStored, sharedElapsedMax } from './compareLines';
 
 const metric: StoredMetric = {
   unit: 'bytes',
@@ -64,5 +64,42 @@ describe('sharedElapsedMax', () => {
     expect(sharedElapsedMax([{ windowStart: 100 }])).toBeUndefined();
     expect(sharedElapsedMax([{ windowStart: 100, windowEnd: 100 }])).toBeUndefined();
     expect(sharedElapsedMax([])).toBeUndefined();
+  });
+});
+
+describe('groupLimits', () => {
+  const a = { name: 'a', colorIndex: 0 };
+  const b = { name: 'b', colorIndex: 1 };
+  const c = { name: 'c', colorIndex: 2 };
+
+  it('is one unnamed line when every run has the same limit', () => {
+    expect(
+      groupLimits([
+        { ...a, limit: 2 },
+        { ...b, limit: 2 },
+      ]),
+    ).toEqual([{ value: 2 }]);
+  });
+
+  it('names the runs per distinct limit, highest first, leaving out runs with none', () => {
+    expect(
+      groupLimits([
+        { ...a, limit: 2 },
+        { ...b, limit: 4 },
+        { ...c, limit: 2 },
+        { name: 'd', colorIndex: 3 },
+      ]),
+    ).toEqual([
+      { value: 4, runs: [b] },
+      { value: 2, runs: [a, c] },
+    ]);
+  });
+
+  it('names the runs when only some have the shared limit', () => {
+    expect(groupLimits([{ ...a, limit: 2 }, b])).toEqual([{ value: 2, runs: [a] }]);
+  });
+
+  it('is empty when no run has a limit', () => {
+    expect(groupLimits([a, { ...b, limit: 0 }])).toEqual([]);
   });
 });
