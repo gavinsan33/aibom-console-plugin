@@ -105,3 +105,65 @@ export const formatFsdpPrecision = (f: NonNullable<Precision['fsdp_mixed_precisi
   if (f.policy && dtypes) return `${f.policy}: ${dtypes}`;
   return f.policy ?? dtypes;
 };
+
+type Distributed = NonNullable<Training['distributed']>;
+
+/** `"8 processes, 2 nodes, 4 per node"`. */
+export const formatTopology = (d: Distributed): string =>
+  withVia(
+    [
+      d.world_size != null ? `${String(d.world_size)} processes` : undefined,
+      d.nodes != null ? `${String(d.nodes)} nodes` : undefined,
+      d.processes_per_node != null ? `${String(d.processes_per_node)} per node` : undefined,
+    ]
+      .filter(Boolean)
+      .join(', '),
+    d.world_declared_via,
+  );
+
+/** `"tensor 2, data 4 (via: device_mesh)"`. */
+export const formatParallelSizes = (d: Distributed): string =>
+  withVia(
+    (
+      [
+        ['tensor', d.tensor_parallel_size],
+        ['pipeline', d.pipeline_parallel_size],
+        ['context', d.context_parallel_size],
+        ['expert', d.expert_parallel_size],
+        ['data', d.data_parallel_size],
+      ] as const
+    )
+      .filter(([, v]) => v != null)
+      .map(([name, v]) => `${name} ${String(v)}`)
+      .join(', '),
+    d.parallel_sizes_declared_via,
+  );
+
+/** `"FSDP2, reshard after forward true, CPU offload false (via: fsdp_module)"`. */
+export const formatFsdp = (f: NonNullable<Distributed['fsdp']>): string =>
+  withVia(
+    [
+      f.version != null ? `FSDP${String(f.version)}` : undefined,
+      f.sharding_strategy,
+      f.reshard_after_forward != null
+        ? `reshard after forward ${String(f.reshard_after_forward)}`
+        : undefined,
+      f.cpu_offload != null ? `CPU offload ${String(f.cpu_offload)}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(', ') || 'enabled',
+    f.declared_via,
+  );
+
+/** `"ZeRO-3, optimizer offload cpu (via: deepspeed_engine)"`. */
+export const formatDeepSpeed = (z: NonNullable<Distributed['deepspeed']>): string =>
+  withVia(
+    [
+      z.zero_stage != null ? `ZeRO-${String(z.zero_stage)}` : undefined,
+      z.offload_optimizer ? `optimizer offload ${z.offload_optimizer}` : undefined,
+      z.offload_param ? `param offload ${z.offload_param}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(', ') || 'enabled',
+    z.declared_via,
+  );

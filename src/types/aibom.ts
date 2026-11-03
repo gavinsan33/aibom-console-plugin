@@ -110,6 +110,40 @@ export interface AIBOMData {
       } | null;
       deepspeed?: string;
     } | null;
+    // Distributed topology. world_declared_via is "environment", "accelerator",
+    // "accelerate_config" or "cli_arg"; parallel_sizes_declared_via "megatron",
+    // "device_mesh", "cli_arg" or "deepspeed_engine". `strategies` lists every
+    // kind of parallelism seen, so FSDP + TP is ["fsdp", "tensor_parallel"].
+    distributed?: {
+      world_size?: number;
+      nodes?: number;
+      processes_per_node?: number;
+      world_declared_via?: string;
+      tensor_parallel_size?: number;
+      pipeline_parallel_size?: number;
+      context_parallel_size?: number;
+      expert_parallel_size?: number;
+      data_parallel_size?: number;
+      parallel_sizes_declared_via?: string;
+      device_mesh?: Record<string, number>;
+      // sharding_strategy is FSDP1's name (HYBRID_SHARD also for FSDP2 on a
+      // 2-D mesh), reshard_after_forward FSDP2's switch.
+      fsdp?: {
+        version?: number;
+        sharding_strategy?: string;
+        reshard_after_forward?: boolean;
+        cpu_offload?: boolean;
+        declared_via?: string;
+      } | null;
+      // Offload devices are "none", "cpu" or "nvme".
+      deepspeed?: {
+        zero_stage?: number;
+        offload_optimizer?: string;
+        offload_param?: string;
+        declared_via?: string;
+      } | null;
+      strategies?: string[];
+    } | null;
     // The optimizer the run built (declared_via "runtime_optimizer") or the
     // settings TrainingArguments/the CLI declared for it. `params` holds what
     // every param group shares, under torch's names; a setting that differs
