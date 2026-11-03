@@ -92,7 +92,11 @@ const AIBOMStoredTelemetryCharts: FC<AIBOMStoredTelemetryChartsProps> = ({
                   metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
-                  limit={showLimits ? limits?.[spec.metricKey] : undefined}
+                  limits={
+                    showLimits && (limits?.[spec.metricKey] ?? 0) > 0
+                      ? [{ value: limits?.[spec.metricKey] ?? 0 }]
+                      : undefined
+                  }
                   runs={[
                     {
                       name,

@@ -77,8 +77,11 @@ in different charts. The "Fit each chart to its data" switch (off by default) op
 into per-chart auto-fit to zoom into a late-starting series, with a note that the charts
 then no longer line up. Each run is one
 aggregate line by default; the "Show individual pods and GPUs" switch expands to
-per-series lines (same color, dashed variants). Hardware limits draw as a labeled
-line; the "Show limits" switch (on by default, shown only when some chart has a
+per-series lines (same color, dashed variants). Hardware limits draw as a labeled red
+line; on Compare, runs with different limits get one line per distinct value, labeled with a
+swatch of each run's color (names are in the tooltip -- they don't fit on the plot), and only
+when every run shares one limit is it a single plain "Limit" (`groupLimits`). Limits stay red
+and dashed, not run-colored, because per-pod/GPU lines already use dashed run colors; the "Show limits" switch (on by default, shown only when some chart has a
 limit) hides them and drops them from the y range, so each chart rescales to its
 data instead of staying sized to a far-off limit. Both tabs are gated by the same
 feature flag (below).

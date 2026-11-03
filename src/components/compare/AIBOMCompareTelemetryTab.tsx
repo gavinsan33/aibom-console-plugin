@@ -26,6 +26,8 @@ import {
   INFERENCE_METRIC_ORDER,
 } from '../../types/aibom';
 import type { StoredTelemetry } from '../../types/telemetrySeries';
+import type { ChartLimit } from '../../utils/compareLines';
+import { groupLimits } from '../../utils/compareLines';
 import { toFlexNumber } from '../../utils/flexible';
 import { limitInSeriesUnit } from '../../utils/formatMetricValue';
 import { runColor } from '../../utils/runColors';
@@ -46,7 +48,7 @@ interface ChartSpec {
   metricKey: string;
   unit?: string;
   runs: CompareChartRun[];
-  limit?: number;
+  limits: ChartLimit[];
 }
 
 /**
@@ -66,17 +68,19 @@ function buildChartSpecs(
   return metricKeys.flatMap((metricKey) => {
     const runs: CompareChartRun[] = [];
     let unit: string | undefined;
-    let limit: number | undefined;
+    const runLimits: { name: string; colorIndex: number; limit?: number }[] = [];
     stored.forEach((run, colorIndex) => {
       const metric = run?.metrics[metricKey];
       if (!run || !metric) return;
       unit ??= metric.unit;
-      if (limit === undefined) {
-        const rstats = items[colorIndex]?.spec?.data?.resource_utilization?.metrics?.[metricKey];
-        const rlimit = toFlexNumber(rstats?.limit);
+      const rstats = items[colorIndex]?.spec?.data?.resource_utilization?.metrics?.[metricKey];
+      const rlimit = toFlexNumber(rstats?.limit);
+      runLimits.push({
+        name: runNames[colorIndex],
+        colorIndex,
         // The series is in raw base units; the stored limit is in display units.
-        if (rlimit !== undefined) limit = limitInSeriesUnit(rlimit, rstats?.unit);
-      }
+        limit: rlimit === undefined ? undefined : limitInSeriesUnit(rlimit, rstats?.unit),
+      });
       runs.push({
         name: runNames[colorIndex],
         colorIndex,
@@ -93,7 +97,7 @@ function buildChartSpecs(
             metricKey,
             unit,
             runs,
-            limit,
+            limits: groupLimits(runLimits),
           },
         ]
       : [];
@@ -160,7 +164,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
                   metricKey={spec.metricKey}
                   expanded={expanded}
                   fitToData={fitToData}
-                  limit={showLimits ? spec.limit : undefined}
+                  limits={showLimits ? spec.limits : undefined}
                 />
               </CardBody>
             </Card>
@@ -224,7 +228,7 @@ const AIBOMCompareTelemetryTab: FC<AIBOMCompareTelemetryTabProps> = ({ items, ru
             </FlexItem>
             {/* Hiding the limits drops them from the y range too, so each chart
                 rescales to its own data instead of staying sized to a far-off limit. */}
-            {hardware.some((spec) => (spec.limit ?? 0) > 0) && (
+            {hardware.some((spec) => spec.limits.length > 0) && (
               <FlexItem>
                 <Switch
                   id="aibom-compare-telemetry-limits"
