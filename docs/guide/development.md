@@ -32,7 +32,7 @@ The local console skips its own login and uses your `oc` token, so it shows exac
 - the AIBOM CRDs from `aibom-webhook-service`, and some `AIBOM` objects in namespaces your user can read;
 - for the Telemetry tabs, AIBOMs with stored telemetry, and read access to their `AIBOMTelemetry` objects (granted by the webhook chart's `aibom-view` role).
 
-An empty list or empty charts usually means missing RBAC or data, not a plugin bug. Check with `oc get aiboms -A` and `oc get aibomtelemetries -n <namespace>`.
+An empty list or empty charts usually means missing RBAC or data, not a plugin bug. Check with `oc get aibomrun -A` and `oc get aibomtelemetries -n <namespace>`.
 
 ## Testing
 
