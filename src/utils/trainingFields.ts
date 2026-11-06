@@ -74,7 +74,7 @@ export const withVia = (value: string, via?: string): string =>
 
 type Precision = NonNullable<Training['precision']>;
 
-/** `"matmul true, cudnn true, float32 matmul precision high"`, as `oc aibom describe` prints it. */
+/** `"matmul true, cudnn true, float32 matmul precision high"`, as `oc aibomrun describe` prints it. */
 export const formatTf32 = (p: Precision): string =>
   [
     p.tf32_matmul != null ? `matmul ${String(p.tf32_matmul)}` : undefined,

@@ -1,7 +1,7 @@
 import type { LabelProps } from '@patternfly/react-core';
 import type { VerifyStatus } from '../../utils/verifySignature';
 
-/** Green only for a fully anchored signature, matching `oc aibom describe`'s color rules. */
+/** Green only for a fully anchored signature, matching `oc aibomrun describe`'s color rules. */
 export const verifyLabelColor = (status: VerifyStatus): LabelProps['color'] =>
   (
     ({
