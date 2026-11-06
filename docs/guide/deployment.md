@@ -65,25 +65,3 @@ helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console \
 ```
 
 The flags are rendered into a ConfigMap the plugin reads at runtime, so changing them needs no image rebuild.
-
-## Building and pushing
-
-### Container image
-
-```sh
-just docker-build    # build the image locally
-just docker-push     # push to Quay (requires `docker login quay.io`)
-just deploy-local    # build, push and deploy in one go
-```
-
-Every push to `main` builds the image through `.github/workflows/images.yml`, tagged `:latest` and `:<short sha>`.
-
-### Helm chart
-
-```sh
-just chart-push      # requires `helm registry login quay.io`
-```
-
-Without `--version`, this publishes a dev build versioned from the latest release tag: the next patch, the commits since the tag and the SHA (for example `0.1.1-dev.5.gabc1234` five commits after `v0.1.0`). Newer builds sort higher, and all sort below the next release. Helm skips these unless you pass `--devel` or the exact version. CI does this on every merge to `main` that touches the chart.
-
-**Releases.** Push a `vX.Y.Z` tag. `.github/workflows/release.yml` builds the image as `quay.io/project-aibom/aibom-console-plugin:X.Y.Z`, then runs `just chart-push --version=X.Y.Z`, which publishes the chart with `version` and `appVersion` set to `X.Y.Z`, so its image defaults to that build. A release is only ever pushed once. `Chart.yaml`'s `version` is unused and never needs bumping.
