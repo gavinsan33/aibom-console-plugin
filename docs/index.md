@@ -6,6 +6,20 @@ It runs inside the OpenShift web console itself, so it inherits the logged-in us
 
 For a terminal-based alternative with the same filter, sort and compare capabilities, see [`oc-aibom`](https://github.com/gavinsan33/oc-aibom), the `kubectl`/`oc` plugin that this plugin's List view mirrors.
 
+## Install
+
+With [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service) already installed, log in as a cluster-admin and install the chart with Helm:
+
+```sh
+oc login
+helm upgrade -i aibom-console-plugin oci://quay.io/project-aibom/aibom-console \
+  -n aibom-console-plugin --create-namespace
+```
+
+This installs the newest release and registers the plugin with the console. Once the console reloads, **AIBOMs** shows up under **Workloads**.
+
+See [Prerequisites](guide/prerequisites.md) for what the cluster needs (including deploying without cluster-admin), and [Deployment](guide/deployment.md) for pinning a version, custom values, feature flags and uninstalling.
+
 ## Features
 
 - **List view:** filter and sort AIBOMs across a namespace or all projects, mirroring `oc aibom list`.
