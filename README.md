@@ -1,3 +1,5 @@
+<img src=".github/logo.svg" alt="Project AIBOM logo" width="80">
+
 # aibom-console-plugin
 
 An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1alpha1`
