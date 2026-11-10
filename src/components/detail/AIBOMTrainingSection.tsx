@@ -40,8 +40,8 @@ const AIBOMTrainingSection: FC<AIBOMTrainingSectionProps> = ({ training }) => {
   const params = formatSettings(optimizer?.params);
 
   return (
-    <Section title={t('Training')} md={6}>
-      <DescriptionList isHorizontal isCompact>
+    <Section title={t('Training')}>
+      <DescriptionList isHorizontal isCompact columnModifier={{ default: '1Col', md: '2Col' }}>
         <Field label={t('Optimizer')}>{training.optimizer}</Field>
         <Field label={t('Learning rate')}>{formatFlexNumber(training.learning_rate)}</Field>
         <Field label={t('Batch size')}>{formatFlexNumber(training.batch_size)}</Field>

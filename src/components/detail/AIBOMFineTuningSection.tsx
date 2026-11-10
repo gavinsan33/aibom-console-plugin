@@ -15,8 +15,8 @@ const AIBOMFineTuningSection: FC<AIBOMFineTuningSectionProps> = ({ fineTuning })
   if (!fineTuning) return null;
 
   return (
-    <Section title={t('Fine-tuning')} md={6}>
-      <DescriptionList isHorizontal isCompact>
+    <Section title={t('Fine-tuning')}>
+      <DescriptionList isHorizontal isCompact columnModifier={{ default: '1Col', md: '2Col' }}>
         <Field label={t('Adaptation method')}>{fineTuning.adaptation_method}</Field>
         <Field label={t('LoRA rank / alpha')}>
           {formatFlexTuple([fineTuning.lora_rank, fineTuning.lora_alpha])}
