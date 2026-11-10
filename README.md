@@ -1,4 +1,17 @@
-# <img src=".github/logo.svg" alt="" width="36"> aibom-console-plugin
+<p align="center">
+  <img src=".github/logo.svg" alt="" width="128">
+</p>
+
+<h1 align="center">aibom-console-plugin</h1>
+
+<p align="center"><strong>Browse, filter and compare AIBOMs in the OpenShift web console</strong></p>
+
+<p align="center">
+  <a href="https://gavinsan33.github.io/project-aibom/aibom-console-plugin/"><img src="https://img.shields.io/badge/docs-Project%20AIBOM-00897b?logo=materialformkdocs&logoColor=white" alt="Documentation"></a>
+  <a href="https://github.com/gavinsan33/aibom-console-plugin/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/gavinsan33/aibom-console-plugin/ci.yml?branch=main&label=CI" alt="CI"></a>
+  <a href="https://github.com/gavinsan33/aibom-console-plugin/tags"><img src="https://img.shields.io/github/v/tag/gavinsan33/aibom-console-plugin?sort=semver&label=version" alt="Version"></a>
+  <a href="https://github.com/gavinsan33/aibom-console-plugin/blob/main/LICENSE"><img src="https://img.shields.io/github/license/gavinsan33/aibom-console-plugin" alt="License"></a>
+</p>
 
 An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1alpha1`
 `AIBOM` custom resources, produced by
