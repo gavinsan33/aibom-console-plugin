@@ -20,7 +20,7 @@ mapping and sort/filter semantics exactly.
 
 **Detail view** (`src/components/AIBOMDetailPage.tsx` + `src/components/detail/`):
 a single AIBOM's full field breakdown, mirroring `oc-aibom describe`'s
-section order and field mapping (see that project's `cmd/kubectl-aibom/main.go`
+section order and field mapping (see that project's `cmd/kubectl-aibomrun/main.go`
 `printDescribe` if extending this). The `Signature:` row is a real verification,
 a port of `oc-aibom`'s `internal/aibom/verify.go` (`src/utils/verifySignature.ts`,
 fetched by `detail/useSignatureVerification.ts`): Ed25519 (`@noble/curves`, not
