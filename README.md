@@ -52,7 +52,7 @@ here.
 
 ## Development
 
-See [docs/guide/development.md](docs/guide/development.md) for running the
+See [Development](https://gavinsan33.github.io/project-aibom/aibom-console-plugin/guide/development/) for running the
 plugin against a local console.
 
 ## Testing
