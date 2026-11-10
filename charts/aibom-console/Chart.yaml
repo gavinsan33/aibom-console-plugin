@@ -5,3 +5,4 @@ type: application
 # Unused: chart-push versions every build from git tags.
 version: 0.0.0
 appVersion: "latest"
+icon: https://gavinsan33.github.io/project-aibom/assets/logo.svg
