@@ -43,6 +43,26 @@ describe('AIBOMHardwareDetails', () => {
     expect(screen.getByText('nvme0n1 894G, sda 1T')).toBeVisible();
   });
 
+  it('shows the typed lists and numbers newer AIBOMs carry', () => {
+    render(
+      <AIBOMHardwareDetails
+        environment={{
+          network: { primary_mtu: 9000, rdma_devices: ['mlx5_0', 'mlx5_1'] },
+          storage: {
+            block_devices: [
+              { name: 'nvme0n1', size: '894G' },
+              { name: 'sda', size: '1T' },
+            ],
+          },
+        }}
+      />,
+    );
+    expand();
+    expect(screen.getByText('9000')).toBeVisible();
+    expect(screen.getByText('mlx5_0, mlx5_1')).toBeVisible();
+    expect(screen.getByText('nvme0n1 894G, sda 1T')).toBeVisible();
+  });
+
   it('puts GPU memory in the Environment card main list', () => {
     render(<AIBOMEnvironmentSection environment={environment} />);
     expect(screen.getByText('2 × 80 GiB')).toBeVisible();
