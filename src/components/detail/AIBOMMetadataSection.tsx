@@ -21,7 +21,9 @@ const AIBOMMetadataSection: FC<AIBOMMetadataSectionProps> = ({ metadata }) => {
         <Field label={t('Generated at')}>
           {metadata.generated_at && formatTimestamp(metadata.generated_at)}
         </Field>
-        <Field label={t('Generator')}>{metadata.generator}</Field>
+        <Field label={t('Generator')}>
+          {[metadata.generator, metadata.generator_version].filter(Boolean).join(' ')}
+        </Field>
       </DescriptionList>
     </Section>
   );
