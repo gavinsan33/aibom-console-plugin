@@ -25,3 +25,12 @@ describe('AIBOMEnvironmentSection software versions', () => {
     expect(screen.queryByText('Torch build')).toBeNull();
   });
 });
+
+describe('AIBOMEnvironmentSection GPU line', () => {
+  it('names the node count for a multi-node workload', () => {
+    render(
+      <AIBOMEnvironmentSection environment={{ gpu_type: 'H100', gpu_count: 16, node_count: 2 }} />,
+    );
+    expect(screen.getByText('H100 x16 (2 nodes)')).toBeVisible();
+  });
+});

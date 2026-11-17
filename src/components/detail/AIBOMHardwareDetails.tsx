@@ -12,12 +12,27 @@ interface AIBOMHardwareDetailsProps {
   environment: Environment;
 }
 
-/** Discovery values are shell output; multi-line ones (lsblk) read better comma-separated. */
-const formatValue = (value: unknown): string =>
-  (typeof value === 'string' ? value : JSON.stringify(value))
+/** Lists since aibom-webhook #209 (rdma_devices names, block_devices {name, size}); older AIBOMs have shell output, whose multi-line values (lsblk) read better comma-separated. */
+const formatValue = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item: unknown) => {
+        if (item && typeof item === 'object') {
+          const { name, size } = item as { name?: unknown; size?: unknown };
+          return [name, size]
+            .filter((p) => p !== undefined)
+            .map(String)
+            .join(' ');
+        }
+        return String(item);
+      })
+      .join(', ');
+  }
+  return (typeof value === 'string' ? value : JSON.stringify(value))
     .trim()
     .split(/\s*\n\s*/)
     .join(', ');
+};
 
 /** Label column width shared with the Environment card's main list, so the two line up. */
 export const ENVIRONMENT_TERM_WIDTH = '22ch';
