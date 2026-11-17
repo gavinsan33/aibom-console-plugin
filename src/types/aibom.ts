@@ -244,8 +244,8 @@ export interface AIBOMData {
     aibom_version?: string;
     generated_at?: string;
     generator?: string;
-    schema_compliance?: string;
-    dataset_detection?: string;
+    /** Webhook release (or commit) that built the record; absent on older records. */
+    generator_version?: string;
   };
 }
 
