@@ -244,8 +244,6 @@ export interface AIBOMData {
     aibom_version?: string;
     generated_at?: string;
     generator?: string;
-    schema_compliance?: string;
-    dataset_detection?: string;
   };
 }
 

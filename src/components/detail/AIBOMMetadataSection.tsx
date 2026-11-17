@@ -22,8 +22,6 @@ const AIBOMMetadataSection: FC<AIBOMMetadataSectionProps> = ({ metadata }) => {
           {metadata.generated_at && formatTimestamp(metadata.generated_at)}
         </Field>
         <Field label={t('Generator')}>{metadata.generator}</Field>
-        <Field label={t('Schema compliance')}>{metadata.schema_compliance}</Field>
-        <Field label={t('Dataset detection')}>{metadata.dataset_detection}</Field>
       </DescriptionList>
     </Section>
   );
