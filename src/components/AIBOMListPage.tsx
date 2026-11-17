@@ -37,7 +37,7 @@ import AIBOMDownloadMenu from './AIBOMDownloadMenu';
 import AIBOMFilterToolbar from './AIBOMFilterToolbar';
 import AIBOMListTable from './AIBOMListTable';
 
-const AIBOM_GVK = { group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOM' };
+const AIBOM_GVK = { group: 'aibom.io', version: 'v1', kind: 'AIBOM' };
 
 const AIBOMListPage: FC = () => {
   const { t } = useTranslation('plugin__aibom-console-plugin');

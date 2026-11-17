@@ -187,7 +187,7 @@ describe('seriesSource', () => {
     const source = seriesSource({ ...base, kind: 'AIBOMTelemetry', name: 'job-telemetry-ab12' });
     expect(source?.groupVersionKind).toEqual({
       group: 'aibom.io',
-      version: 'v1alpha1',
+      version: 'v1',
       kind: 'AIBOMTelemetry',
     });
     expect(source?.name).toBe('job-telemetry-ab12');

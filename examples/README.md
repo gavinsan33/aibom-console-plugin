@@ -1,6 +1,6 @@
 # Sample AIBOMs
 
-Fake `aibom.io/v1alpha1` `AIBOM` custom resources for exercising this
+Fake `aibom.io/v1` `AIBOM` custom resources for exercising this
 plugin's List, Detail, and Compare views without needing a real
 `aibom-webhook-service`-instrumented training/serving run.
 

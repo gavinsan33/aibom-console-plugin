@@ -1,7 +1,7 @@
 # A fake vLLM serving AIBOM -- exercises the Detail view's Inference
 # section/Inference Performance table and the Telemetry tab's vLLM chart
 # gating (inference.serving_engine === 'vllm').
-apiVersion: aibom.io/v1alpha1
+apiVersion: aibom.io/v1
 kind: AIBOM
 metadata:
   name: aibom-vllm-granite-inference

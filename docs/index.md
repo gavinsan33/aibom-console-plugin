@@ -1,6 +1,6 @@
 # AIBOM Console Plugin
 
-An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1alpha1` `AIBOM` custom resources, produced by [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service).
+An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1` `AIBOM` custom resources, produced by [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service).
 
 It runs inside the OpenShift web console itself, so it inherits the logged-in user's OAuth token and existing RBAC on `aiboms.aibom.io`. There is no separate login or auth system.
 
