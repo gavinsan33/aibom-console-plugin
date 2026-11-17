@@ -217,6 +217,8 @@ export interface AIBOMData {
     driver_version?: string;
     framework_version?: string;
     kernel_version?: string;
+    /** Distinct nodes of the GPU pods gpu_count adds up (aibom-webhook #115). */
+    node_count?: number;
     gpu_memory_mb?: (number | string)[];
     cpu?: Record<string, unknown>;
     network?: Record<string, unknown>;
@@ -256,6 +258,17 @@ export interface AIBOMPod {
   start_time?: string;
   status?: string;
   exit_code?: number | string | null;
+  /** The pod's own GPU count; absent before aibom-webhook #115. */
+  gpu_count?: number;
+  /** App containers and the images they ran; absent before aibom-webhook #208. */
+  containers?: AIBOMPodContainer[];
+}
+
+export interface AIBOMPodContainer {
+  name?: string;
+  image?: string;
+  /** Kubelet-reported image, with the digest (`repo@sha256:...` or bare `sha256:...`). */
+  image_id?: string;
 }
 
 export interface MetricSegments {

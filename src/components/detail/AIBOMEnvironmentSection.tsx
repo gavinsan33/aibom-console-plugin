@@ -45,7 +45,10 @@ const AIBOMEnvironmentSection: FC<AIBOMEnvironmentSectionProps> = ({ environment
         >
           <Field label={t('GPU')}>
             {environment.gpu_type &&
-              `${environment.gpu_type} x${formatFlexNumber(environment.gpu_count)}`}
+              `${environment.gpu_type} x${formatFlexNumber(environment.gpu_count)}` +
+                ((environment.node_count ?? 0) > 1
+                  ? ` (${formatFlexNumber(environment.node_count)} ${t('nodes')})`
+                  : '')}
           </Field>
           <Field label={t('GPU memory')}>
             {environment.gpu_memory_mb && formatGpuMemory(environment.gpu_memory_mb)}
