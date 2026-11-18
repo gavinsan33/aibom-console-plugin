@@ -3,7 +3,7 @@
 # match its declared name -- useful for exercising the List view's
 # --drift-only-equivalent filter and the Compare view's divergent-row
 # highlighting against run1.
-apiVersion: aibom.io/v1alpha1
+apiVersion: aibom.io/v1
 kind: AIBOM
 metadata:
   name: aibom-granite-lora-finetune-run2

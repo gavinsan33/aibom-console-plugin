@@ -17,7 +17,7 @@ export interface TelemetryWindowInfo {
 
 export interface TelemetrySeriesRef {
   schema_version: number;
-  /** `"AIBOMTelemetry"`: an `aibom.io/v1alpha1` object named `name`, whose `spec.seriesJson` is the payload. Typed `string` because `spec.data` is unvalidated. */
+  /** `"AIBOMTelemetry"`: an `aibom.io/v1` object named `name`, whose `spec.seriesJson` is the payload. Typed `string` because `spec.data` is unvalidated. */
   kind: string;
   name: string;
   /** SHA-256 hex of the UTF-8 bytes of the payload string. */

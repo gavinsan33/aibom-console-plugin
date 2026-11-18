@@ -1,7 +1,7 @@
 # AI Agent Instructions for aibom-console-plugin
 
 This is an OpenShift Console dynamic plugin for browsing/filtering
-`aibom.io/v1alpha1` `AIBOM` custom resources (produced by the sibling project
+`aibom.io/v1` `AIBOM` custom resources (produced by the sibling project
 `aibom-webhook-service`). It was scaffolded from
 [`openshift/console-plugin-template`](https://github.com/openshift/console-plugin-template);
 most of the build/deploy/i18n/lint machinery below is inherited from that
@@ -89,7 +89,7 @@ limit) hides them and drops them from the y range, so each chart rescales to its
 data instead of staying sized to a far-off limit. Both tabs are gated by the same
 feature flag (below).
 
-Data: `spec.data.telemetry_series_ref` points at a separate `aibom.io/v1alpha1`
+Data: `spec.data.telemetry_series_ref` points at a separate `aibom.io/v1`
 `AIBOMTelemetry` object (payload in `spec.seriesJson`) written by
 `aibom-webhook-service` at collection time -- deliberately not inline in the AIBOM
 (the list page's all-AIBOMs watch would carry it) and not a ConfigMap (it would
@@ -195,7 +195,7 @@ and re-check `*.spec.ts` against the Go `*_test.go` files.
 
 - Functional components with hooks only (no classes), all `.tsx`.
 - `AIBOMListPage.tsx` owns data fetching (`useK8sWatchResource` against GVK
-  `{group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOM'}`) and filter/sort
+  `{group: 'aibom.io', version: 'v1', kind: 'AIBOM'}`) and filter/sort
   state; `AIBOMFilterToolbar.tsx` and `AIBOMListTable.tsx` are presentational.
   Table rows link to `/aiboms/:namespace/:name` via `react-router`'s `Link`.
 - `AIBOMDetailPage.tsx` fetches a single AIBOM (`useParams` for

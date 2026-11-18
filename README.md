@@ -13,7 +13,7 @@
   <a href="https://github.com/gavinsan33/aibom-console-plugin/blob/main/LICENSE"><img src="https://img.shields.io/github/license/gavinsan33/aibom-console-plugin" alt="License"></a>
 </p>
 
-An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1alpha1`
+An OpenShift Console dynamic plugin for browsing and filtering `aibom.io/v1`
 `AIBOM` custom resources, produced by
 [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service).
 It runs inside the OpenShift web console itself, so it inherits the logged-in

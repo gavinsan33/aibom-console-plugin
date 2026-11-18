@@ -6,7 +6,7 @@ import { loadStoredTelemetry, seriesSource } from './storedTelemetry';
 
 const AIBOM_TELEMETRY_MODEL: K8sModel = {
   apiGroup: 'aibom.io',
-  apiVersion: 'v1alpha1',
+  apiVersion: 'v1',
   kind: 'AIBOMTelemetry',
   plural: 'aibomtelemetries',
   abbr: 'AIT',

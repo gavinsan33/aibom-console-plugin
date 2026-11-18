@@ -4,7 +4,7 @@
 #
 # spec is immutable once created (the CRD enforces this) -- to change one of
 # these after applying, delete and re-apply rather than editing in place.
-apiVersion: aibom.io/v1alpha1
+apiVersion: aibom.io/v1
 kind: AIBOM
 metadata:
   name: aibom-granite-lora-finetune-run1

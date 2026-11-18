@@ -84,7 +84,7 @@ describe('AIBOMCompareTelemetryTab', () => {
       ([resources]: [Record<string, unknown>]) => Object.values(resources),
     );
     expect(watched).toContainEqual({
-      groupVersionKind: { group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOMTelemetry' },
+      groupVersionKind: { group: 'aibom.io', version: 'v1', kind: 'AIBOMTelemetry' },
       namespace: 'ns-a',
       name: 'a-telemetry-ab12',
       isList: false,

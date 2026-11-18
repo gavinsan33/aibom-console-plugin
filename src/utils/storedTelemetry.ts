@@ -115,7 +115,7 @@ export interface SeriesSource {
 export function seriesSource(ref: TelemetrySeriesRef): SeriesSource | undefined {
   if (ref.kind !== 'AIBOMTelemetry' || !ref.name) return undefined;
   return {
-    groupVersionKind: { group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOMTelemetry' },
+    groupVersionKind: { group: 'aibom.io', version: 'v1', kind: 'AIBOMTelemetry' },
     name: ref.name,
     text: (resource) => {
       if (!isRecord(resource) || !isRecord(resource.spec)) return undefined;

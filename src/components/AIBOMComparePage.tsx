@@ -27,7 +27,7 @@ import AIBOMCompareTelemetryTab from './compare/AIBOMCompareTelemetryTab';
 import AIBOMComparePerformanceTable from './compare/AIBOMComparePerformanceTable';
 import Section from './detail/Section';
 
-const AIBOM_GVK = { group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOM' };
+const AIBOM_GVK = { group: 'aibom.io', version: 'v1', kind: 'AIBOM' };
 
 /** Parses the `items` query param: a comma-joined list of `namespace/name` pairs, itself URI-encoded as a single value so neither separator collides with real namespace/name characters. */
 function parseItemKeys(raw: string | null): { key: string; namespace: string; name: string }[] {

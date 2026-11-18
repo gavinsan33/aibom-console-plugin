@@ -37,7 +37,7 @@ import AIBOMTelemetryTab from './detail/AIBOMTelemetryTab';
 import Section from './detail/Section';
 import { getPluginFeatureFlags } from '../utils/pluginFeatureFlags';
 
-const AIBOM_GVK = { group: 'aibom.io', version: 'v1alpha1', kind: 'AIBOM' };
+const AIBOM_GVK = { group: 'aibom.io', version: 'v1', kind: 'AIBOM' };
 
 const AIBOMDetailPage: FC = () => {
   const { t } = useTranslation('plugin__aibom-console-plugin');
