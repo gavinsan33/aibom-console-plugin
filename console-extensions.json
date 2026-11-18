@@ -30,7 +30,9 @@
       "name": "%plugin__aibom-console-plugin~AIBOMs%",
       "href": "/aiboms",
       "perspective": "admin",
-      "section": "workloads"
+      "section": "workloads",
+      "insertAfter": "jobs",
+      "insertBefore": "daemonsets"
     }
   },
   {
