@@ -81,7 +81,7 @@ const FIELD_ACCESSORS: { label: string; getValue: (a: AIBOMResource) => string }
   { label: 'Python Version', getValue: getPythonVersion },
   { label: 'Torch CUDA Version', getValue: getTorchCudaVersion },
   { label: 'Libraries', getValue: getLibraries },
-  { label: 'AIBOM Version', getValue: getAibomVersion },
+  { label: 'Record Format', getValue: getAibomVersion },
 ];
 
 /**

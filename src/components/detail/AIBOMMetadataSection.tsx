@@ -15,9 +15,9 @@ const AIBOMMetadataSection: FC<AIBOMMetadataSectionProps> = ({ metadata }) => {
   if (!metadata) return null;
 
   return (
-    <Section title={t('AIBOM metadata')} md={6}>
+    <Section title={t('AIBOM metadata')}>
       <DescriptionList isHorizontal isCompact>
-        <Field label={t('Version')}>{metadata.aibom_version}</Field>
+        <Field label={t('Record format')}>{metadata.aibom_version}</Field>
         <Field label={t('Generated at')}>
           {metadata.generated_at && formatTimestamp(metadata.generated_at)}
         </Field>
