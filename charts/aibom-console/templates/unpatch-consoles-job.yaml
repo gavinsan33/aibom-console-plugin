@@ -1,0 +1,44 @@
+{{- if .Values.plugin.jobs.patchConsoles.enabled }}
+# Undoes patch-consoles-job.yaml on `helm uninstall`: Helm doesn't revert the
+# patcher's edit to spec.plugins, so without this the console keeps trying to
+# load a plugin that's gone. Runs before Helm deletes the patcher's
+# ServiceAccount and ClusterRole, which it reuses.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "openshift-console-plugin.patcherName" . }}-remove
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openshift-console-plugin.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        {{- include "openshift-console-plugin.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ template "openshift-console-plugin.patcherServiceAccountName" . }}
+      {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.jobs.patchConsoles.podSecurityContext.enabled) }}
+      securityContext: {{ tpl (toYaml (omit .Values.plugin.jobs.patchConsoles.podSecurityContext "enabled")) $ | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: remove
+          image: {{ required "Patcher image must be specified!" .Values.plugin.jobs.patchConsoles.image }}
+          {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.containerSecurityContext) }}
+          securityContext: {{ tpl (toYaml (omit .Values.plugin.jobs.patchConsoles.containerSecurityContext "enabled")) $ | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.plugin.jobs.patchConsoles.resources | nindent 12 }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+                set -euo pipefail
+                plugins=$(oc get consoles.operator.openshift.io cluster -o json \
+                  | jq -c --arg name '{{ template "openshift-console-plugin.name" . }}' '(.spec.plugins // []) - [$name]')
+                oc patch consoles.operator.openshift.io cluster --type=merge -p "{\"spec\":{\"plugins\":$plugins}}"
+{{- end }}

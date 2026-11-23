@@ -65,7 +65,7 @@ The plugin is enabled by the chart's patcher Job, a Helm `post-install,post-upgr
 
 **Permissions.** The default `openshift-gitops` instance can already create the chart's `ConsolePlugin`, ClusterRole and ClusterRoleBinding, but nothing else in a namespace it doesn't manage. Either give its controller cluster-admin, or label the plugin's namespace `argocd.argoproj.io/managed-by=openshift-gitops` before the first sync.
 
-**Removing.** Deleting the Application doesn't take the plugin out of `spec.plugins`, the same as `helm uninstall`, so the console keeps trying to load it. Remove it by hand with the `oc` command under [Uninstall](#uninstall).
+**Removing.** Argo CD versions that ignore Helm `pre-delete` hooks skip the chart's removal Job, so deleting the Application leaves the plugin in `spec.plugins`, and the console keeps trying to load it. Remove it by hand with the `oc` command under [Uninstall](#uninstall).
 
 ## Uninstall
 
@@ -73,12 +73,11 @@ The plugin is enabled by the chart's patcher Job, a Helm `post-install,post-upgr
 just uninstall
 ```
 
-This removes the Helm release (including the `ConsolePlugin` CR) and un-registers the plugin from the console operator. Pass `--namespace=<ns>` if you deployed elsewhere.
+This removes the Helm release, including the `ConsolePlugin` CR, the same as `helm uninstall aibom-console-plugin -n aibom-console-plugin` (or **Uninstall Helm Release** in the console). Pass `--namespace=<ns>` if you deployed elsewhere. The chart's pre-delete Job takes the plugin out of `spec.plugins` on the console operator, undoing the patcher Job.
 
-Or do it by hand. `helm uninstall` removes the chart's resources but does **not** undo the patcher job's edit to the console operator, which added the plugin to `spec.plugins`:
+If that Job can't run, uninstall with `--no-hooks` and remove the plugin from `spec.plugins` by hand:
 
 ```sh
-helm uninstall aibom-console-plugin -n aibom-console-plugin
 oc get consoles.operator.openshift.io cluster -o json \
   | jq '.spec.plugins -= ["aibom-console-plugin"]' \
   | oc apply -f -
