@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AIBOM Console Plugin",
+  "type": "object",
+  "properties": {
+    "networkPolicy": {
+      "type": "object",
+      "description": "Ingress NetworkPolicy letting the console reach the plugin.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Allow the openshift-console namespace to reach the plugin pod. Without it, a namespace that isolates ingress breaks the whole console."
+        }
+      }
+    },
+    "plugin": {
+      "type": "object",
+      "description": "The console plugin.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Create the ConsolePlugin. Turn off only if a cluster-admin creates it separately."
+        },
+        "name": {
+          "type": "string",
+          "description": "ConsolePlugin name, also used for the Deployment and Service.",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "description": "ConsolePlugin display name."
+        },
+        "image": {
+          "type": "object",
+          "description": "Plugin image.",
+          "properties": {
+            "repository": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "description": "Empty uses the chart's appVersion."
+            }
+          }
+        },
+        "imagePullPolicy": {
+          "type": "string",
+          "enum": ["", "Always", "IfNotPresent", "Never"]
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "featureFlags": {
+          "type": "object",
+          "description": "Plugin features, read at runtime.",
+          "properties": {
+            "telemetryTab": {
+              "type": "boolean",
+              "description": "Show the Telemetry tab on the Detail and Compare views."
+            },
+            "csvExport": {
+              "type": "boolean",
+              "description": "Show the CSV Download menu on the List and Detail views."
+            }
+          }
+        },
+        "jobs": {
+          "type": "object",
+          "properties": {
+            "patchConsoles": {
+              "type": "object",
+              "description": "Jobs that add the plugin to the console operator's spec.plugins on install and remove it on uninstall.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Turn off to enable the plugin on the console yourself."
+                },
+                "image": {
+                  "type": "string",
+                  "description": "Image with oc and jq. Also runs helm test.",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

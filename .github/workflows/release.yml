@@ -7,12 +7,18 @@ name: Release
 #
 # The Quay robot needs push access to the aibom-console-plugin image repo as
 # well as the aibom-console chart repo.
+#
+# The chart tarball is also attached to a GitHub release for the tag, which
+# `just catalog-submit` submits to the OpenShift Helm catalog.
 on:
   push:
     tags: ["v*.*.*"]
 
 env:
   REGISTRY: quay.io/project-aibom
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -59,4 +65,9 @@ jobs:
             --password "${{ secrets.QUAY_ROBOT_TOKEN }}"
 
       - name: Publish chart
-        run: just chart-push --version=${{ steps.version.outputs.version }} --repo=$REGISTRY
+        run: just chart-push --version=${{ steps.version.outputs.version }} --repo=$REGISTRY --out=dist
+
+      - name: Create the GitHub release with the chart tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.tgz --verify-tag --generate-notes

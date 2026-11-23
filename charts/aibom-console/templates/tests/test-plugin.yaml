@@ -1,0 +1,36 @@
+# `helm test`: the plugin serves its manifest on the Service the ConsolePlugin
+# points the console at. Skips certificate verification: the serving cert is
+# signed by the service CA, which this pod doesn't mount. Reuses the patcher
+# image for curl.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ template "openshift-console-plugin.name" . }}-test
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: test
+      image: {{ .Values.plugin.jobs.patchConsoles.image | quote }}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          curl -fsSk --max-time 10 \
+            "https://{{ template "openshift-console-plugin.name" . }}.{{ .Release.Namespace }}.svc:{{ .Values.plugin.port }}{{ trimSuffix "/" .Values.plugin.basePath }}/plugin-manifest.json" \
+            | jq -e --arg name '{{ template "openshift-console-plugin.name" . }}' '.name == $name' >/dev/null
+          echo "plugin manifest: ok"

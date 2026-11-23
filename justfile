@@ -157,10 +157,9 @@ deploy *args: _check-auth
         "${kube_as_user_args[@]}" \
         "${values_args[@]}"
 
-# Uninstall the console plugin: remove the Helm release (including the
-# ConsolePlugin CR) and un-register the plugin from the console operator, which
-# the patcher job added to spec.plugins and Helm does not revert. Removing it
-# from spec.plugins needs cluster-admin.
+# Uninstall the console plugin: remove the Helm release, including the
+# ConsolePlugin CR. The chart's pre-delete Job takes the plugin out of the
+# console operator's spec.plugins, so this needs cluster-admin.
 #
 # Usage: just uninstall [--namespace=<ns>]
 [group('deploy')]
@@ -174,10 +173,7 @@ uninstall *args: _check-auth
             *) echo "error: unknown argument '$arg' (expected --namespace=<ns>)" >&2; exit 1 ;;
         esac
     done
-    helm uninstall aibom-console-plugin -n "$namespace"
-    oc get consoles.operator.openshift.io cluster -o json --kube-as-user=system:admin \
-        | jq '.spec.plugins -= ["aibom-console-plugin"]' \
-        | oc apply --kube-as-user=system:admin -f -
+    helm uninstall aibom-console-plugin -n "$namespace" --kube-as-user=system:admin
 
 # --- Chart publishing --------------------------------------------------------
 #
@@ -201,19 +197,21 @@ uninstall *args: _check-auth
 # appVersion X.Y.Z, so its image defaults to :X.Y.Z -- the tag
 # .github/workflows/release.yml builds from the same git tag. Refuses a version
 # that's already published: a release is pushed once.
-#
-# Usage: just chart-push [--version=X.Y.Z] [--repo=<repo>]
+# --out keeps the package, which release.yml attaches to the GitHub release.
+# Usage: just chart-push [--version=X.Y.Z] [--repo=<repo>] [--out=<dir>]
 [group('charts')]
 chart-push *args:
     #!/usr/bin/env bash
     set -euo pipefail
     repo="{{ default_repo }}"
     version=""
+    out=""
     for arg in {{ args }}; do
         case "$arg" in
             --version=*) version="${arg#--version=}" ;;
             --repo=*) repo="${arg#--repo=}" ;;
-            *) echo "error: unknown argument '$arg' (expected --version=X.Y.Z or --repo=<repo>)" >&2; exit 1 ;;
+            --out=*) out="${arg#--out=}" ;;
+            *) echo "error: unknown argument '$arg' (expected --version=X.Y.Z, --repo=<repo> or --out=<dir>)" >&2; exit 1 ;;
         esac
     done
     app_version_args=()
@@ -228,8 +226,103 @@ chart-push *args:
         [[ "$desc" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)-(g[0-9a-f]+(-dirty)?)$ ]] || { echo "error: can't parse git describe output '$desc'" >&2; exit 1; }
         version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))-dev.${BASH_REMATCH[4]}.${BASH_REMATCH[5]}"
     fi
-    pkg_dir="$(mktemp -d)"
-    trap 'rm -rf "$pkg_dir"' EXIT
-    helm package charts/aibom-console -d "$pkg_dir" --version "$version" "${app_version_args[@]}"
-    helm push "$pkg_dir/aibom-console-$version.tgz" "oci://$repo"
+    if [[ -z "$out" ]]; then
+        out="$(mktemp -d)"
+        trap 'rm -rf "$out"' EXIT
+    fi
+    helm package charts/aibom-console -d "$out" --version "$version" "${app_version_args[@]}"
+    helm push "$out/aibom-console-$version.tgz" "oci://$repo"
     echo "pushed oci://$repo/aibom-console --version=$version"
+
+# Runs Red Hat's chart-verifier on the chart, packaged as <version>, with the
+# community profile the OpenShift Helm catalog uses. Skips chart-testing, which
+# installs the chart into a cluster. Writes the report to <out>.
+# Needs podman or docker.
+# Usage: just chart-verify [--version=<semver>] [--out=<dir>]
+[group('charts')]
+chart-verify *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    version="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
+    version="${version#v}"
+    out="chart-verifier"
+    for arg in {{ args }}; do
+        case "$arg" in
+            --version=*) version="${arg#--version=}" ;;
+            --out=*) out="${arg#--out=}" ;;
+            *) echo "error: unknown argument '$arg' (expected --version=<semver> or --out=<dir>)" >&2; exit 1 ;;
+        esac
+    done
+    runtime="$(command -v podman || command -v docker)" || { echo "error: needs podman or docker" >&2; exit 1; }
+    mkdir -p "$out"
+    helm package charts/aibom-console -d "$out" --version "$version" --app-version "$version" >/dev/null
+    out="$(cd "$out" && pwd)"
+    "$runtime" run --rm -v "$out:/charts:z" quay.io/redhat-certification/chart-verifier:latest \
+        verify "/charts/aibom-console-$version.tgz" -x chart-testing --set profile.vendortype=community \
+        > "$out/aibom-console-$version-report.yaml"
+    echo "aibom-console: $out/aibom-console-$version-report.yaml"
+    grep -B2 'outcome: FAIL' "$out/aibom-console-$version-report.yaml" | grep 'check:' | sed 's/^ */  failed: /' || true
+
+# Submits the chart at <version> to the OpenShift Helm catalog
+# (openshift-helm-charts/charts): a branch and pull request from your fork
+# adding the chart's tarball from the vX.Y.Z GitHub release.
+# Run it as a GitHub user listed in catalog/**/OWNERS, since the catalog's CI
+# checks who opened the pull request. Refuses a version that's already in the
+# catalog or already has an open pull request. --dry-run commits in a temporary
+# clone and stops before pushing. Needs a logged-in gh and a fork of the catalog.
+# Usage: just catalog-submit [--version=<semver>] [--fork=<owner/repo>] [--dry-run]
+[group('charts')]
+catalog-submit *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    upstream="openshift-helm-charts/charts"
+    chart="aibom-console"
+    version="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
+    version="${version#v}"
+    fork=""
+    dry_run=false
+    for arg in {{ args }}; do
+        case "$arg" in
+            --version=*) version="${arg#--version=}" ;;
+            --fork=*) fork="${arg#--fork=}" ;;
+            --dry-run) dry_run=true ;;
+            *) echo "error: unknown argument '$arg' (expected --version=<semver>, --fork=<owner/repo> or --dry-run)" >&2; exit 1 ;;
+        esac
+    done
+    repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+    [ -n "$fork" ] || fork="$(gh api user -q .login)/charts"
+    gh repo view "$fork" --json name >/dev/null 2>&1 \
+        || { echo "error: no fork $fork; fork $upstream first, or pass --fork=<owner/repo>" >&2; exit 1; }
+    assets="$(gh release view "v$version" -R "$repo" --json assets -q '.assets[].name' 2>/dev/null)" \
+        || { echo "error: $repo has no GitHub release v$version" >&2; exit 1; }
+    grep -qx "$chart-$version.tgz" <<<"$assets" \
+        || { echo "error: release v$version has no $chart-$version.tgz" >&2; exit 1; }
+    title="Add project-aibom/$chart $version"
+    if gh api "repos/$upstream/contents/charts/community/project-aibom/$chart/$version" --silent 2>/dev/null; then
+        echo "error: $chart $version is already in the catalog" >&2; exit 1
+    fi
+    open="$(gh pr list -R "$upstream" --state open --search "\"$title\" in:title" --json title,url \
+        -q ".[] | select(.title == \"$title\") | .url")"
+    [ -z "$open" ] || { echo "error: $chart $version already has an open pull request: $open" >&2; exit 1; }
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    gh release download "v$version" -R "$repo" -p "$chart-$version.tgz" -D "$work/dist"
+    git clone -q --depth 1 --filter=blob:none --sparse "https://github.com/$upstream.git" "$work/catalog"
+    cd "$work/catalog"
+    git sparse-checkout set charts/community/project-aibom
+    git remote add fork "https://github.com/$fork.git"
+    branch="project-aibom-$chart-$version"
+    dir="charts/community/project-aibom/$chart/$version"
+    git switch -q -C "$branch" origin/main
+    mkdir -p "$dir"
+    cp "$work/dist/$chart-$version.tgz" "$dir/"
+    git add "$dir"
+    git commit -q -m "$title"
+    if $dry_run; then
+        echo "dry run: would push $fork:$branch and open \"$title\" with:"
+        git show --stat --format= HEAD | sed 's/^/  /'
+        exit 0
+    fi
+    git push -q fork "$branch"
+    gh pr create -R "$upstream" --base main --head "${fork%%/*}:$branch" --title "$title" \
+        --body "Chart tarball for community chart \`project-aibom/$chart\` $version."
