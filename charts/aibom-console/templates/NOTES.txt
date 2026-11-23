@@ -1,0 +1,11 @@
+{{- $name := include "openshift-console-plugin.name" . -}}
+{{ if .Values.plugin.jobs.patchConsoles.enabled -}}
+The {{ $name }} console plugin is installed and enabled. Reload the web console to see Workloads > AIBOMs.
+{{- else -}}
+The {{ $name }} console plugin is installed but not enabled. A cluster-admin enables it with:
+
+  oc patch consoles.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"{{ $name }}"}]'
+{{- end }}
+
+AIBOMs come from the aibom-webhook chart, which must also be installed.
+Check the install with:  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

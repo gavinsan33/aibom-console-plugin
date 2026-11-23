@@ -5,4 +5,11 @@ type: application
 # Unused: chart-push versions every build from git tags.
 version: 0.0.0
 appVersion: "latest"
+# OpenShift 4.12, the first with ConsolePlugin v1.
+kubeVersion: ">=1.25.0-0"
+home: https://gavinsan33.github.io/project-aibom/
 icon: https://gavinsan33.github.io/project-aibom/assets/logo.svg
+sources:
+  - https://github.com/gavinsan33/aibom-console-plugin
+annotations:
+  charts.openshift.io/name: AIBOM Console Plugin
