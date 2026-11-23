@@ -197,19 +197,21 @@ uninstall *args: _check-auth
 # appVersion X.Y.Z, so its image defaults to :X.Y.Z -- the tag
 # .github/workflows/release.yml builds from the same git tag. Refuses a version
 # that's already published: a release is pushed once.
-#
-# Usage: just chart-push [--version=X.Y.Z] [--repo=<repo>]
+# --out keeps the package, which release.yml attaches to the GitHub release.
+# Usage: just chart-push [--version=X.Y.Z] [--repo=<repo>] [--out=<dir>]
 [group('charts')]
 chart-push *args:
     #!/usr/bin/env bash
     set -euo pipefail
     repo="{{ default_repo }}"
     version=""
+    out=""
     for arg in {{ args }}; do
         case "$arg" in
             --version=*) version="${arg#--version=}" ;;
             --repo=*) repo="${arg#--repo=}" ;;
-            *) echo "error: unknown argument '$arg' (expected --version=X.Y.Z or --repo=<repo>)" >&2; exit 1 ;;
+            --out=*) out="${arg#--out=}" ;;
+            *) echo "error: unknown argument '$arg' (expected --version=X.Y.Z, --repo=<repo> or --out=<dir>)" >&2; exit 1 ;;
         esac
     done
     app_version_args=()
@@ -224,8 +226,10 @@ chart-push *args:
         [[ "$desc" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)-([0-9]+)-(g[0-9a-f]+(-dirty)?)$ ]] || { echo "error: can't parse git describe output '$desc'" >&2; exit 1; }
         version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))-dev.${BASH_REMATCH[4]}.${BASH_REMATCH[5]}"
     fi
-    pkg_dir="$(mktemp -d)"
-    trap 'rm -rf "$pkg_dir"' EXIT
-    helm package charts/aibom-console -d "$pkg_dir" --version "$version" "${app_version_args[@]}"
-    helm push "$pkg_dir/aibom-console-$version.tgz" "oci://$repo"
+    if [[ -z "$out" ]]; then
+        out="$(mktemp -d)"
+        trap 'rm -rf "$out"' EXIT
+    fi
+    helm package charts/aibom-console -d "$out" --version "$version" "${app_version_args[@]}"
+    helm push "$out/aibom-console-$version.tgz" "oci://$repo"
     echo "pushed oci://$repo/aibom-console --version=$version"
