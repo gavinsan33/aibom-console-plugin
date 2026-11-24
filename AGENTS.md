@@ -7,10 +7,11 @@ This is an OpenShift Console dynamic plugin for browsing/filtering
 most of the build/deploy/i18n/lint machinery below is inherited from that
 template unchanged — see its own docs for the underlying mechanics.
 
-**Key Technologies:** TypeScript + React 18, PatternFly 6, Rspack (module
-federation), react-i18next, Playwright, Helm.
+**Key Technologies:** TypeScript + React 18, PatternFly 6, webpack (module
+federation), react-i18next, Jest, Playwright, Helm.
 
-**Compatibility:** OpenShift 4.12+ (`ConsolePlugin` CRD v1).
+**Compatibility:** OpenShift 4.22+ (SDK `4.22-latest`; `consolePlugin.dependencies`
+declares `@console/pluginAPI >=4.22.0-0`, and older consoles silently skip the plugin).
 
 ## Scope
 
@@ -41,17 +42,15 @@ verifies; List/Compare/CSV do not.
 
 **Compare view** (`src/components/AIBOMComparePage.tsx` + `src/components/compare/`):
 select 2+ AIBOMs on the List view (checkbox column + action bar), compared
-at `/aiboms/compare?items=<urlencoded ns/name pairs>`. Deliberately unifies
-`oc-aibom`'s two separate `diff` (exactly 2, full field list, only differing
-fields, delta/%-change) and `compare` (2+, fixed 4-field summary, averages
-only, no delta) commands into one N-scalable view: `src/utils/compareFields.ts`
-always shows the fuller `diff` field list for all N items (flagging
-divergent rows rather than hiding agreement), `src/utils/comparePerformance.ts`
+at `/aiboms/compare?items=<urlencoded ns/name pairs>`. Mirrors `oc-aibom compare`
+(`diff` is its `--changed` over two): `src/utils/compareFields.ts` shows the full
+field list for all N items (same rows as `oc-aibom`'s `compareFieldAccessors`,
+flagging divergent rows rather than hiding agreement), `src/utils/comparePerformance.ts`
 shows Delta/%-change only at exactly 2. Its hardware rows lead with a Runtime pseudo-metric
 (`execution_metadata.duration_seconds`, shown as a duration; `oc-aibom`'s `CompareRuntime`). If
 you're tempted to add a `Trend()`-word-based badge (`"up"`/`"down"`/`"flat"`/
-`"volatile"`) — don't; it's defined in `oc-aibom`'s Go types but never
-actually rendered by any CLI command, so there's no reference format to
+`"volatile"`) — don't; `oc-aibom` removed it from its Go types without any
+CLI command ever rendering it, so there's no reference format to
 mirror and you'd be inventing presentation, not porting it.
 
 **Telemetry tabs** (Detail: `src/components/detail/AIBOMTelemetryTab.tsx` +
@@ -94,7 +93,7 @@ Data: `spec.data.telemetry_series_ref` points at a separate `aibom.io/v1`
 `aibom-webhook-service` at collection time -- deliberately not inline in the AIBOM
 (the list page's all-AIBOMs watch would carry it) and not a ConfigMap (it would
 clutter namespaces). Schema: `src/types/telemetrySeries.ts`; source of truth is
-that repo's `CLAUDE.md` "Telemetry Time Series". The object is found by the
+that repo's `IMPLEMENTATION_NOTES.md` "Telemetry Time Series". The object is found by the
 reference's own `name` (it can't match the AIBOM's `generateName`d name), read via
 `useK8sWatchResources` with the viewer's own token. `checkStoredTelemetry`
 (`src/utils/storedTelemetry.ts`) requires the payload's UTF-8 byte length to equal
@@ -144,7 +143,7 @@ the row count is estimated from each reference's `size_bytes` so the
 invalid / error -- so a missing viewer grant isn't reported as "no telemetry").
 Export errors must always surface as a message, never a silent no-op.
 `src/utils/csv.ts` does RFC 4180 escaping and prefixes a `'` to string cells that
-start with `= + - @` (CSV injection: `spec.data` is unvalidated user text); keep
+start with `= + - @`, tab or CR (CSV injection: `spec.data` is unvalidated user text); keep
 that when adding columns. List-page downloads cover everything counted in "N
 selected", including rows a filter hides.
 
@@ -156,8 +155,10 @@ build) at `/usr/share/nginx/html/feature-flags.json`;
 `src/utils/pluginFeatureFlags.ts` fetches it at runtime through the
 console's same-origin `/api/plugins/<name>/` proxy (the prefix webpack's
 publicPath uses for chunks) and defaults to *enabled* when the file is
-missing or unreadable. Don't gate it on cluster RBAC or watch a cluster
-resource for it -- the plugin's SA has no API access by design.
+missing or unreadable. `plugin.featureFlags.csvExport` gates the CSV
+Download menu the same way but defaults to *disabled*. Don't gate either
+on cluster RBAC or watch a cluster
+resource for them -- the plugin's SA has no API access by design.
 
 Segmented-chart visualizations beyond what the existing metrics tables and
 the Telemetry tab already cover are deliberately out of scope until later
@@ -184,12 +185,14 @@ and re-check `*.spec.ts` against the Go `*_test.go` files.
 
 ### Dynamic Plugin System
 
-- `console-extensions.json`: declares the `/aiboms` route + nav item.
-- `package.json`'s `consolePlugin.exposedModules`: maps `AIBOMListPage` to
-  `src/components/AIBOMListPage.tsx`. Any new page component needs an entry
+- `console-extensions.json`: declares the `/aiboms`, `/aiboms/:namespace/:name`
+  and `/aiboms/compare` routes, plus an **AIBOMs** nav item under Workloads (admin
+  perspective) and one in the dev perspective.
+- `package.json`'s `consolePlugin.exposedModules`: maps `AIBOMListPage`,
+  `AIBOMDetailPage` and `AIBOMComparePage` to `src/components/`. Any new page component needs an entry
   here **and** a matching `$codeRef` in `console-extensions.json`.
-- `rspack.config.ts`: module federation + build config (inherited from the
-  template; don't hand-roll webpack config here).
+- `webpack.config.ts`: module federation + build config (inherited from the
+  template's `release-4.22` branch, whose SDK doesn't support rspack).
 
 ### Component Structure
 
@@ -208,7 +211,7 @@ and re-check `*.spec.ts` against the Go `*_test.go` files.
   Performance and Inference Performance (same table shape, different
   metric key order/labels) — don't fork it into two components.
 - Namespace scope comes from the console's own `useActiveNamespace`/
-  `NamespaceBar` (the `#ALL_NS#` sentinel, `ALL_NAMESPACES_KEY`, means "all
+  `NamespaceBar` (`isAllNamespacesKey` detects the `#ALL_NS#` sentinel meaning "all
   projects") — don't reimplement an explicit all-namespaces toggle. The
   Detail view instead takes namespace from its own route param, since it's
   reached by a direct link, not the namespace switcher.
@@ -235,8 +238,10 @@ adding/changing translatable strings to update `locales/en/`.
   `__mocks__/@openshift-console/dynamic-plugin-sdk.tsx` (Jest auto-mocks this
   scoped package from that path). Add a stub there for any new SDK
   hook/component a test needs to render through.
-- `yarn test-e2e[-headless]` — Playwright, requires a real cluster
-  (`start-console.sh`); not part of routine local iteration.
+- `yarn test-e2e[-headless]` — Playwright, requires a real cluster (`oc login`):
+  it Helm-installs `charts/aibom-console` with the image in `PLUGIN_PULL_SPEC`, then
+  drives the console at `BRIDGE_BASE_ADDRESS` (default `http://localhost:9000`;
+  `BRIDGE_KUBEADMIN_PASSWORD` if it has auth); not part of routine local iteration.
 
 ## Build & Deployment
 
@@ -254,4 +259,4 @@ deliberate architecture change, flag it rather than bolting it on.
 
 - [Console Plugin SDK](https://github.com/openshift/console/tree/master/frontend/packages/console-dynamic-plugin-sdk)
 - [`oc-aibom`](https://github.com/gavinsan33/oc-aibom) — the CLI this plugin's List view mirrors
-- [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service) — produces the AIBOM CRs this plugin reads; see its `CLAUDE.md` for the full data model
+- [`aibom-webhook-service`](https://github.com/gavinsan33/aibom-webhook-service) — produces the AIBOM CRs this plugin reads; see its `docs/reference/schema.md` for the full data model
