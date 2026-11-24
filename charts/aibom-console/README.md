@@ -6,7 +6,7 @@ Full documentation: https://gavinsan33.github.io/project-aibom/
 
 ## Install
 
-Needs OpenShift 4.12 or later. Install the `aibom-webhook` chart first: it provides the `AIBOM` CRDs and the `aibom-view` role the views read with. A cluster-admin installs this chart, because it creates a cluster-scoped `ConsolePlugin` and enables it on the console operator:
+Needs OpenShift 4.22 or later. Install the `aibom-webhook` chart first: it provides the `AIBOM` CRDs and the `aibom-view` role the views read with. A cluster-admin installs this chart, because it creates a cluster-scoped `ConsolePlugin` and enables it on the console operator:
 
 ```bash
 helm upgrade --install aibom-console-plugin oci://quay.io/project-aibom/aibom-console \
