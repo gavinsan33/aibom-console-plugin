@@ -32,11 +32,11 @@ here.
 
 ## Features
 
-- **List view**: Filter/sort AIBOMs across a namespace or all projects (mirroring `oc-aibom list`)
-- **Detail view**: Full field breakdown — model, dataset, environment, performance tables (mirroring `oc-aibom describe`)
+- **List view**: Filter/sort AIBOMs across a namespace or all projects (mirroring `oc aibomrun list`)
+- **Detail view**: Full field breakdown — model, dataset, environment, performance tables (mirroring `oc aibomrun describe`)
 - **Compare view**: Side-by-side comparison of 2+ AIBOMs with hardware/inference metrics and delta calculations
 - **Telemetry tabs** (Detail and Compare): charts for GPU, CPU, memory, network, and inference metrics (vLLM), drawn from the time series the webhook stores with each AIBOM at collection time, so they outlive Prometheus's retention. AIBOMs created before that was stored have no charts.
-- **CSV export**: download a summary or the full telemetry of the selected AIBOMs
+- **CSV export**: download a summary or the full telemetry of the selected AIBOMs (off by default; enable with `plugin.featureFlags.csvExport`)
 
 ## Prerequisites
 
@@ -47,8 +47,8 @@ here.
   object, covered by the same role in the webhook chart's current version) —
   with no extra RBAC grant.
 - Node.js and [yarn](https://yarnpkg.com) to build the plugin.
-- `oc`/`kubectl` and an OpenShift cluster (4.12+, `ConsolePlugin` CRD v1) to
-  run or deploy it.
+- `oc`/`kubectl` and an OpenShift cluster (4.22+, the console version the
+  plugin's SDK targets) to run or deploy it.
 
 ## Development
 
@@ -91,7 +91,7 @@ Or build, push, and deploy in one go:
 just deploy-local
 ```
 
-The image builds and pushes on every push to main via GitHub Actions (`.github/workflows/images.yml`), tagging both `:latest` (mutable) and `:${commit_sha}` (immutable). It uses the `QUAY_ROBOT_USERNAME`/`QUAY_ROBOT_TOKEN` secrets, which need push access to the Quay org.
+The image builds and pushes on every push to main via GitHub Actions (`.github/workflows/images.yml`), tagging both `:latest` (mutable) and `:<short sha>` (immutable). It uses the `QUAY_ROBOT_USERNAME`/`QUAY_ROBOT_TOKEN` secrets, which need push access to the Quay org.
 
 ### Helm chart
 

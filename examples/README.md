@@ -13,13 +13,13 @@ plugin's List, Detail, and Compare views without needing a real
   the Compare view's divergent-field highlighting. Also `OOMKilled`, to
   exercise the pod-status coloring.
 - `aibom-vllm-inference.yaml` — a vLLM serving workload, to exercise the
-  Detail view's Inference section/Inference Performance table and the
-  Telemetry tab's vLLM chart gating (`inference.serving_engine === 'vllm'`).
+  Detail view's Inference section/Inference Performance table.
 
 ## Apply
 
 These default to the `project-gavin-test` namespace — edit `metadata.namespace`
-in each file, or override on the command line:
+in each file first (`oc apply -n` can't override a namespace set in the file),
+then:
 
 ```sh
 oc apply -n <your-namespace> -f examples/
@@ -34,9 +34,8 @@ target namespace (the same access a workload's postprocess Job would have).
 - **`spec` is immutable once created** (the CRD enforces this with a CEL
   validation rule) — to change one of these after applying, `oc delete` and
   re-apply rather than editing in place.
-- The pod names/nodes referenced here are fake and don't correspond to real
-  cluster resources, so the Detail view's **Telemetry** tab will correctly
-  show "no data" for these — that tab queries live Prometheus for the named
-  pods, which don't actually exist. Everything else (List filtering/sorting,
+- These have no `spec.data.telemetry_series_ref` (no stored `AIBOMTelemetry`
+  series), so the **Telemetry** tabs show their empty state — they chart only
+  stored series, never live Prometheus. Everything else (List filtering/sorting,
   Detail's Overview tab, Compare) works fully offline against just the CR
   data.

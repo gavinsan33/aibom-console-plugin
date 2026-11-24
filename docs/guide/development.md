@@ -42,7 +42,7 @@ yarn lint    # eslint + prettier + stylelint
 yarn build   # production build
 ```
 
-`./test-frontend.sh` runs the CI unit-test checks: it fails if `yarn i18n` would change `locales/` or if `yarn.lock` has duplicate resolutions, then runs `yarn test`. It doesn't lint or build.
+`./test-frontend.sh` runs the template's OpenShift CI unit-test checks (GitHub CI doesn't run it): it fails if `yarn i18n` would change `locales/` or if `yarn.lock` has duplicate resolutions, then runs `yarn test`. It doesn't lint or build.
 
 !!! note "Keep in sync with oc-aibom"
     The `filter`, `sort` and `flexible` utilities under `src/utils/` are a direct TypeScript port of `oc-aibom`'s `internal/aibom/{filter,sort,flexible}.go`. They use the same field mapping, the same case-insensitive exact-match semantics, and the same missing-metric and unparseable-date edge cases. If either side changes, change the other.
